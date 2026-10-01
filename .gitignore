@@ -1,0 +1,12 @@
+node_modules/
+server/data/*.db
+server/data/*.db-journal
+server/data/*.db-wal
+server/data/*.db-shm
+uploads/*
+!uploads/.gitkeep
+dist/
+*.log
+.DS_Store
+.idea/
+.vscode/

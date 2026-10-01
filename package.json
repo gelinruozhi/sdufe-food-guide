@@ -1,0 +1,19 @@
+{
+  "name": "sdufe-food-guide",
+  "version": "1.0.0",
+  "private": true,
+  "description": "食在山财 · 山东财经大学校园美食共建平台（H5）",
+  "scripts": {
+    "install:all": "npm install --prefix server && npm install --prefix web",
+    "dev": "concurrently -n server,web -c red,green \"npm run dev --prefix server\" \"npm run dev --prefix web\"",
+    "start": "npm run start --prefix server",
+    "seed": "npm run seed --prefix server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}
