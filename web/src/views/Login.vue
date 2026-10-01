@@ -1,78 +1,159 @@
 <template>
-  <div>
-    <van-nav-bar title="登录 / 注册" left-arrow @click-left="$router.back()" />
+  <div class="auth-page">
+    <button class="back press" @click="$router.back()">‹</button>
 
-    <div class="login-head">
-      <h2>食在山财</h2>
-      <p>登录后可评价、点赞与投稿共建</p>
-    </div>
+    <div class="auth-logo float">🍜</div>
+    <h1 class="auth-title display-title">欢迎回来<br />干饭人</h1>
+    <p class="auth-sub muted">登录后评价、收藏、投稿，一起完善美食地图</p>
 
-    <van-tabs v-model:active="mode" shrink color="#c0392b">
-      <van-tab title="登录"></van-tab>
-      <van-tab title="注册"></van-tab>
-    </van-tabs>
-
-    <div class="page">
-      <van-cell-group inset>
-        <van-field v-model="form.username" label="用户名" clearable
-          placeholder="3-20 位字母数字下划线" />
-        <van-field v-model="form.password" label="密码" type="password"
-          placeholder="至少 6 位" />
-        <van-field v-if="mode === 1" v-model="form.nickname" label="昵称"
-          placeholder="选填，默认为用户名" />
-      </van-cell-group>
-
-      <div style="margin:22px 16px;">
-        <van-button round block type="danger" @click="submit">
-          {{ mode === 0 ? '登录' : '注册并登录' }}
-        </van-button>
+    <div class="auth-form">
+      <div class="input-row">
+        <span>👤</span>
+        <input v-model="username" placeholder="用户名" autocomplete="username" />
+      </div>
+      <div class="input-row">
+        <span>🔑</span>
+        <input
+          v-model="password"
+          type="password"
+          placeholder="密码"
+          autocomplete="current-password"
+          @keyup.enter="login"
+        />
       </div>
 
-      <div class="demo-tip">
-        演示账号：管理员 admin / admin123<br>
-        普通用户 xiaoming / 123456
-      </div>
+      <button
+        class="btn btn-primary btn-block"
+        :disabled="loading"
+        @click="login"
+      >
+        {{ loading ? '登录中…' : '登 录' }}
+      </button>
     </div>
+
+    <div class="quick-accounts">
+      <p class="muted tiny">演示账号（点击填充）</p>
+      <button class="qa-chip press" @click="fill('admin', 'admin123')">
+        管理员 admin
+      </button>
+      <button class="qa-chip press" @click="fill('xiaoming', '123456')">
+        同学 xiaoming
+      </button>
+    </div>
+
+    <p class="to-register">
+      还没有账号？<router-link to="/register">立即注册</router-link>
+    </p>
   </div>
 </template>
 
 <script>
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { showSuccessToast, showToast } from 'vant';
+import { useRouter, useRoute } from 'vue-router';
 import { api, setToken } from '../api.js';
+import { toast } from '../lib/toast.js';
 
 export default {
   setup() {
     const router = useRouter();
-    const mode = ref(0);
-    const form = ref({ username: '', password: '', nickname: '' });
+    const route = useRoute();
+    const username = ref('');
+    const password = ref('');
+    const loading = ref(false);
 
-    async function submit() {
-      const path = mode.value === 0 ? '/api/auth/login' : '/api/auth/register';
+    function fill(u, p) {
+      username.value = u;
+      password.value = p;
+    }
+
+    async function login() {
+      if (!username.value || !password.value) {
+        toast.fail('请输入用户名和密码');
+        return;
+      }
+      loading.value = true;
       try {
-        const r = await api(path, { method: 'POST', body: form.value });
+        const r = await api('/api/auth/login', {
+          method: 'POST',
+          body: { username: username.value, password: password.value },
+        });
         setToken(r.token);
-        showSuccessToast(mode.value === 0 ? '登录成功' : '注册成功');
-        setTimeout(() => router.replace('/me'), 700);
+        toast.success('登录成功');
+        router.replace(route.query.redirect || '/');
       } catch (e) {
-        showToast(e.message);
+        toast.fail(e.message);
+      } finally {
+        loading.value = false;
       }
     }
 
-    return { mode, form, submit };
+    return { username, password, loading, login, fill };
   },
 };
 </script>
 
 <style scoped>
-.login-head { text-align: center; padding: 34px 0 20px; }
-.login-head h2 { font-size: 26px; font-weight: 800; letter-spacing: 3px; color: #c0392b; }
-.login-head p { font-size: 12.5px; color: #969799; margin-top: 8px; }
-.demo-tip {
+.auth-page {
+  min-height: 100vh;
+  padding: 70px 26px 30px;
   text-align: center;
-  font-size: 12px;
-  color: #969799;
-  line-height: 2;
 }
+.back {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: var(--shadow-card);
+  font-size: 24px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 4px;
+}
+.auth-logo {
+  width: 92px;
+  height: 92px;
+  margin: 0 auto 18px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, #ff6a45, var(--primary-deep));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  box-shadow: var(--shadow-primary);
+}
+.auth-title { font-size: 30px; margin: 0 0 10px; }
+.auth-sub { font-size: 12.5px; margin: 0 0 30px; }
+
+.auth-form { text-align: left; }
+.input-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  background: #fff;
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow-card);
+  padding: 14px 16px;
+  margin-bottom: 13px;
+}
+.input-row span { font-size: 18px; }
+.input-row input { flex: 1; font-size: 15px; }
+
+.quick-accounts { margin-top: 26px; }
+.quick-accounts p { margin: 0 0 10px; }
+.qa-chip {
+  background: var(--primary-soft);
+  color: var(--primary-deep);
+  border-radius: 999px;
+  padding: 7px 16px;
+  font-size: 12px;
+  font-weight: 800;
+  margin: 0 5px;
+}
+.to-register { margin-top: 30px; font-size: 13px; color: var(--ink-2); }
+.to-register a { color: var(--primary); font-weight: 800; }
 </style>

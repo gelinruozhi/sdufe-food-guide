@@ -1,53 +1,390 @@
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html, body { height: 100%; }
-body {
-  background: #e9ebef;
-  font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  color: #323233;
-  font-size: 14px;
+/* ============================================================
+   食在山财 · Foodie Pop 设计系统
+   奶油暖底 × 番茄红 × 芝士黄 × 香菜绿，大圆角、弹性动效
+   ============================================================ */
+
+:root {
+  /* 色彩 */
+  --bg: #fff6ee;
+  --bg-2: #ffede0;
+  --card: #ffffff;
+  --ink: #241a12;
+  --ink-2: #8c7b6e;
+  --ink-3: #b6a99c;
+  --line: #f3e7da;
+
+  --primary: #ff5a36;
+  --primary-deep: #e8420f;
+  --primary-soft: #ffe9e2;
+  --yellow: #ffc53d;
+  --yellow-deep: #f5a623;
+  --green: #22b573;
+  --green-soft: #e2f6ec;
+  --pink: #ff7da0;
+  --pink-soft: #ffe7ee;
+  --blue: #4d9de0;
+  --blue-soft: #e6f2fc;
+
+  /* 阴影 */
+  --shadow-card: 0 8px 24px rgba(120, 60, 20, 0.08);
+  --shadow-primary: 0 10px 26px rgba(255, 90, 54, 0.32);
+  --shadow-pop: 0 16px 44px rgba(60, 30, 10, 0.2);
+
+  /* 圆角 */
+  --r-lg: 26px;
+  --r-md: 19px;
+  --r-sm: 13px;
+
+  --font: -apple-system, BlinkMacSystemFont, 'HarmonyOS Sans SC', 'PingFang SC',
+    'MiSans', 'Microsoft YaHei', system-ui, sans-serif;
+  --font-black: 'Arial Black', 'PingFang SC', 'HarmonyOS Sans SC',
+    'Microsoft YaHei', system-ui, sans-serif;
+
+  --tabbar-h: 76px;
 }
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family: var(--font);
+  color: var(--ink);
+  background: var(--bg);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
 #app {
-  max-width: 480px;
+  max-width: 520px;
   margin: 0 auto;
   min-height: 100vh;
-  background: #f7f8fa;
-  box-shadow: 0 0 24px rgba(0, 0, 0, 0.08);
   position: relative;
-  padding-bottom: 54px;
+  background: var(--bg);
+  box-shadow: 0 0 60px rgba(120, 60, 20, 0.06);
 }
-.page { padding: 12px; }
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+img {
+  display: block;
+}
+button {
+  font-family: inherit;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: inherit;
+}
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  outline: none;
+  border: none;
+  background: none;
+}
+
+/* ---------- 页面容器 ---------- */
+.screen {
+  padding: 0 16px calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0) + 16px);
+  min-height: 100vh;
+}
+.screen.no-tab {
+  padding-bottom: 30px;
+}
 .page-head {
-  padding: 18px 16px 12px;
-  background: #fff;
+  padding: 18px 2px 6px;
 }
-.page-head h2 {
-  font-size: 19px;
-  font-weight: 700;
+
+/* ---------- 文字 ---------- */
+.muted {
+  color: var(--ink-2);
 }
-.page-head p {
-  font-size: 12.5px;
-  color: #969799;
-  margin-top: 4px;
+.tiny {
+  font-size: 11.5px;
+}
+.display-title {
+  font-family: var(--font-black);
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  line-height: 1.08;
 }
 .section-title {
-  font-size: 15px;
-  font-weight: 700;
-  margin: 18px 4px 10px;
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
+  margin: 22px 2px 12px;
+}
+.section-title h3 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 900;
+  letter-spacing: -0.3px;
 }
 .section-title .more {
-  font-size: 12px;
-  color: #969799;
-  font-weight: 400;
+  font-size: 12.5px;
+  color: var(--ink-2);
 }
-.muted { color: #969799; }
-.price { color: #ee0a24; font-weight: 700; }
-.stars-gold { color: #ffb400; letter-spacing: 1px; }
-.empty-box {
-  text-align: center;
-  padding: 48px 0;
-  color: #969799;
+
+/* ---------- 卡片 ---------- */
+.card {
+  background: var(--card);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-card);
+}
+.press {
+  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.press:active {
+  transform: scale(0.96);
+}
+
+/* ---------- 按钮 ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 15px;
+  padding: 13px 24px;
+  transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+}
+.btn:active {
+  transform: scale(0.95);
+}
+.btn-primary {
+  background: linear-gradient(135deg, #ff6a45, var(--primary-deep));
+  color: #fff;
+  box-shadow: var(--shadow-primary);
+}
+.btn-yellow {
+  background: linear-gradient(135deg, #ffd45e, var(--yellow-deep));
+  color: #4a2e00;
+  box-shadow: 0 10px 24px rgba(245, 166, 35, 0.35);
+}
+.btn-ghost {
+  background: #fff;
+  color: var(--ink);
+  box-shadow: var(--shadow-card);
+}
+.btn-outline {
+  background: transparent;
+  color: var(--primary);
+  box-shadow: inset 0 0 0 1.8px var(--primary);
+}
+.btn-block {
+  width: 100%;
+}
+.btn-sm {
+  padding: 8px 16px;
   font-size: 13px;
+}
+
+/* ---------- 标签 / 贴纸 ---------- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 999px;
+  padding: 4px 11px;
+  font-size: 11.5px;
+  font-weight: 700;
+  background: #f5ede4;
+  color: var(--ink-2);
+}
+.chip-primary {
+  background: var(--primary-soft);
+  color: var(--primary-deep);
+}
+.chip-green {
+  background: var(--green-soft);
+  color: var(--green);
+}
+.sticker {
+  position: absolute;
+  font-weight: 900;
+  border-radius: 9px;
+  padding: 3px 9px;
+  font-size: 11px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  transform: rotate(-6deg);
+}
+
+/* ---------- 表单 ---------- */
+.field {
+  background: #fff;
+  border-radius: var(--r-sm);
+  padding: 13px 15px;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 12px;
+}
+.field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--ink-2);
+  margin-bottom: 5px;
+}
+.field input,
+.field textarea,
+.field select {
+  width: 100%;
+  font-size: 15px;
+  background: transparent;
+}
+.field textarea {
+  resize: none;
+}
+
+/* ---------- 空态 ---------- */
+.empty {
+  text-align: center;
+  padding: 56px 20px;
+  color: var(--ink-3);
+}
+.empty .emoji {
+  font-size: 52px;
+  display: block;
+  margin-bottom: 12px;
+}
+.empty p {
+  font-size: 13.5px;
+  margin: 0 0 16px;
+}
+
+/* ---------- 骨架屏 ---------- */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: #f1e7dc;
+  border-radius: 10px;
+}
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.65),
+    transparent
+  );
+  animation: shimmer 1.3s infinite;
+}
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ============================================================
+   动效
+   ============================================================ */
+.pop {
+  animation: pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: var(--d, 0s);
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.float {
+  animation: float 3.4s ease-in-out infinite;
+}
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+.wiggle {
+  animation: wiggle 2.8s ease-in-out infinite;
+}
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(-4deg);
+  }
+  50% {
+    transform: rotate(4deg);
+  }
+}
+.heartbeat {
+  animation: heartbeat 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes heartbeat {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.35);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 翻牌 3D */
+.flip-scene {
+  perspective: 1200px;
+}
+.flip-card {
+  transform-style: preserve-3d;
+  transition: transform 0.7s cubic-bezier(0.4, 0.1, 0.2, 1);
+}
+.flip-card.flipping {
+  transform: rotateX(0.5turn);
+}
+
+/* 页面切换过渡 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.18s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* 隐藏滚动条但保留滚动 */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
 }

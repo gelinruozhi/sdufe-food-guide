@@ -1,332 +1,651 @@
 <template>
-  <div v-if="stall">
-    <van-nav-bar title="窗口详情" left-arrow @click-left="$router.back()" />
-
-    <!-- 封面与基本信息 -->
-    <div class="cover-big" :style="{ background: coverBg }">
-      <img v-if="stall.cover" :src="stall.cover" alt="">
-      <span v-else class="big-char">{{ stall.name.charAt(0) }}</span>
+  <div class="sd">
+    <!-- ============ 头图 ============ -->
+    <div class="hero">
+      <img v-if="stall.cover" :src="stall.cover" />
+      <div v-else class="hero-fallback" :style="{ background: meta.gradient }">
+        <span class="hero-emoji float">{{ meta.emoji }}</span>
+        <span class="hero-circle hc1" />
+        <span class="hero-circle hc2" />
+      </div>
+      <button class="back press" @click="$router.back()">‹</button>
+      <div class="hero-mask">
+        <span class="hero-tag">
+          {{ stall.stall_type === 'inside' ? '校内 · ' + (stall.floor?.name || '') : '校外店铺' }}
+        </span>
+        <h1>{{ stall.name }}</h1>
+      </div>
     </div>
 
-    <div class="info-card">
-      <div class="title-row">
-        <h2>{{ stall.name }}</h2>
-        <span v-if="stall.stall_type === 'outside'" class="tag-out">校外</span>
+    <div class="body">
+      <!-- 关键信息 -->
+      <div class="quick card">
+        <div class="q-item">
+          <b>¥{{ stall.avg_price }}</b><span>人均消费</span>
+        </div>
+        <div class="q-sep" />
+        <div class="q-item q-wide">
+          <b class="q-hours">{{ stall.business_hours }}</b><span>营业时间</span>
+        </div>
       </div>
-      <div class="sub-row">
-        <span>{{ stall.category }}</span>
-        <span class="price" v-if="stall.avg_price">人均 ¥{{ stall.avg_price }}</span>
+      <div v-if="stall.address" class="addr">
+        <span>📍 {{ stall.address }}</span>
+        <a v-if="stall.phone" :href="`tel:${stall.phone}`"> · {{ stall.phone }}</a>
       </div>
-      <p class="desc">{{ stall.description }}</p>
-      <p class="hours muted">营业时间：{{ stall.business_hours || '以现场为准' }}</p>
 
-      <!-- 校外信息 -->
-      <template v-if="stall.stall_type === 'outside'">
-        <van-cell title="地址" :value="stall.address || '—'" />
-        <van-cell title="电话" is-link v-if="stall.phone" @click="callPhone" />
-        <van-cell title="电话" value="—" v-else />
-        <div class="dl-box" v-if="stall.delivery_supported">
-          <div class="dl-title">支持外卖 · {{ stall.delivery_platform }}</div>
-          <div class="dl-meta muted">
-            起送 ¥{{ stall.min_order || '—' }} · 配送费 ¥{{ stall.delivery_fee || '—' }}
+      <!-- 评分仪表 -->
+      <div class="rate card">
+        <div class="rate-left">
+          <div class="big-score">{{ stall.rating_avg }}</div>
+          <StarBar :model-value="Math.round(stall.rating_avg)" readonly :size="15" />
+          <div class="muted tiny">{{ stall.rating_count }} 条评价</div>
+        </div>
+        <div class="dist">
+          <div v-for="i in [5, 4, 3, 2, 1]" :key="i" class="dist-row">
+            <span class="dist-n">{{ i }}</span>
+            <div class="dist-track">
+              <div class="dist-fill" :style="{ width: pct(i) + '%' }" />
+            </div>
+            <span class="dist-c">{{ stall.distribution?.[i] || 0 }}</span>
           </div>
-          <van-button size="small" type="warning" round @click="goDelivery">
-            去 {{ stall.delivery_platform }} 点单
-          </van-button>
-        </div>
-      </template>
-    </div>
-
-    <!-- 评分 -->
-    <div class="rate-card">
-      <div class="rate-left">
-        <div class="big-score">{{ stall.rating_avg ? stall.rating_avg.toFixed(1) : '—' }}</div>
-        <div class="stars-gold">{{ starsText }}</div>
-        <div class="muted" style="font-size:11.5px;">{{ stall.rating_count }} 条评价</div>
-      </div>
-      <div class="dist">
-        <div v-for="i in 5" :key="i" class="dist-row">
-          <span class="d-star">{{ 6 - i }} ★</span>
-          <div class="bar"><div class="bar-in" :style="{ width: distWidth(6 - i) }"></div></div>
-          <span class="d-count">{{ stall.distribution[6 - i] }}</span>
         </div>
       </div>
-    </div>
 
-    <!-- 操作栏 -->
-    <van-grid :column-num="4" class="action-grid">
-      <van-grid-item icon="thumb-up-o" :text="`赞 ${stall.upvotes}`" @click="vote(1)"
-        :class="{ active: stall.my_vote === 1 }" />
-      <van-grid-item icon="thumb-down-o" :text="`踩 ${stall.downvotes}`" @click="vote(-1)"
-        :class="{ active: stall.my_vote === -1 }" />
-      <van-grid-item :icon="stall.my_favorite ? 'star' : 'star-o'" text="收藏"
-        @click="toggleFavorite" />
-      <van-grid-item icon="warning-o" text="举报" @click="reportShow = true" />
-    </van-grid>
+      <!-- 态度按钮 -->
+      <div class="actions">
+        <button class="act press" :class="{ on: myVote === 1 }" @click="doVote(1)">
+          <span class="act-ic">👍</span><span>{{ stall.upvotes }}</span>
+        </button>
+        <button class="act press" :class="{ down: myVote === -1 }" @click="doVote(-1)">
+          <span class="act-ic">👎</span><span>{{ stall.downvotes }}</span>
+        </button>
+        <button class="act press" :class="{ on: myFav }" @click="doFav">
+          <span class="act-ic">⭐</span><span>{{ myFav ? '已收藏' : '收藏' }}</span>
+        </button>
+        <button class="act press" @click="openReport">
+          <span class="act-ic">🚩</span><span>举报</span>
+        </button>
+      </div>
 
-    <!-- 评价区 -->
-    <div class="section-title" style="padding:0 12px;">
-      全部评价
-      <van-button size="mini" type="danger" round @click="openReview">写评价</van-button>
-    </div>
-    <div class="review-list">
-      <div v-for="rv in reviews" :key="rv.id" class="review-item">
+      <!-- 介绍 -->
+      <div class="intro card">
+        <h3>窗口介绍</h3>
+        <p>{{ stall.description }}</p>
+      </div>
+
+      <!-- 外卖 -->
+      <div v-if="stall.delivery_supported" class="delivery card">
+        <div class="dl-info">
+          <h3>外卖点单</h3>
+          <p class="muted tiny">
+            {{ stall.delivery_platform }} · 起送 ¥{{ stall.min_order }} · 配送 ¥{{ stall.delivery_fee }}
+          </p>
+        </div>
+        <button class="btn btn-primary btn-sm" @click="toast('演示环境未接入真实下单')">去点单</button>
+      </div>
+
+      <!-- 评价 -->
+      <div class="section-title">
+        <h3>全部评价 {{ stall.rating_count }}</h3>
+        <button class="write-entry" @click="openReview">✏️ 写评价</button>
+      </div>
+
+      <div
+        v-for="(rv, i) in reviews"
+        :key="rv.id"
+        class="review card"
+        v-rise="i * 50"
+      >
         <div class="rv-head">
-          <span class="rv-name">{{ rv.nickname }}</span>
-          <span class="stars-gold rv-stars">{{ starText(rv.star) }}</span>
+          <div class="rv-avatar">{{ rv.anonymous ? '🕵️' : AVATARS[rv.id % AVATARS.length] }}</div>
+          <div class="rv-id">
+            <div class="rv-name">{{ rv.nickname }}</div>
+            <StarBar :model-value="rv.star" readonly :size="12" />
+          </div>
+          <span class="muted tiny rv-time">{{ rv.created_at }}</span>
         </div>
-        <p class="rv-content" v-if="rv.content">{{ rv.content }}</p>
-        <div class="rv-images" v-if="rv.images.length">
-          <van-image
-            v-for="(img, idx) in rv.images"
-            :key="idx"
-            :src="img"
-            width="82"
-            height="82"
-            fit="cover"
-            radius="4"
-            @click="preview(rv.images, idx)"
+        <p v-if="rv.content" class="rv-content">{{ rv.content }}</p>
+        <div v-if="rv.images.length" class="rv-images">
+          <img
+            v-for="(im, k) in rv.images"
+            :key="k"
+            :src="im"
+            @click="preview = im"
           />
         </div>
-        <div class="rv-foot">
-          <span class="muted">{{ rv.created_at }}</span>
-          <span class="helpful" :class="{ on: rv.my_useful }" @click="toggleHelpful(rv)">
-            有用 {{ rv.helpful_count }}
-          </span>
-        </div>
+        <button class="helpful" :class="{ on: rv.my_useful }" @click="doHelpful(rv)">
+          👍 有用 {{ rv.helpful_count }}
+        </button>
       </div>
-      <div v-if="!reviews.length" class="empty-box">还没有评价，来当第一个分享的人</div>
     </div>
 
-    <!-- 写评价弹窗 -->
-    <van-popup v-model:show="reviewShow" position="bottom" round :style="{ maxHeight: '88%' }">
-      <div class="review-form">
-        <h3>评价这个窗口</h3>
-        <div class="form-stars">
-          <StarRating interactive v-model="form.star" />
-        </div>
-        <van-field
-          v-model="form.content"
-          type="textarea"
-          rows="3"
-          maxlength="500"
-          show-word-limit
-          placeholder="说说味道、分量、出餐速度……"
-        />
-        <van-uploader v-model="fileList" multiple :max-count="6" :after-read="onUpload"
-          accept="image/*" />
-        <van-cell center title="匿名发布">
-          <template #right-icon>
-            <van-switch v-model="form.anonymous" size="22" />
-          </template>
-        </van-cell>
-        <van-button type="danger" block round @click="submitReview">发布评价</van-button>
-      </div>
-    </van-popup>
+    <button class="fab press" @click="openReview">✏️ 写评价</button>
 
-    <!-- 举报弹窗 -->
-    <van-dialog
-      v-model:show="reportShow"
-      title="举报该窗口"
-      show-cancel-button
-      @confirm="submitReport"
-    >
-      <van-field v-model="reportReason" placeholder="请填写举报原因" style="margin:8px 16px;" />
-    </van-dialog>
+    <!-- 写评价 -->
+    <Sheet v-model="reviewOpen">
+      <h3 class="sheet-h">为「{{ stall.name }}」打分</h3>
+      <div class="write-stars">
+        <StarBar v-model="form.star" :size="42" show-text />
+      </div>
+      <textarea
+        v-model="form.content"
+        rows="4"
+        class="write-area"
+        placeholder="说说味道、分量、性价比，给同学参考…"
+      />
+      <div class="write-images">
+        <div v-for="(im, k) in form.images" :key="k" class="wi-thumb">
+          <img :src="im" />
+          <button @click="form.images.splice(k, 1)">×</button>
+        </div>
+        <label v-if="form.images.length < 6 && !uploading" class="wi-add">
+          <input type="file" accept="image/*" hidden @change="pickImage" />＋
+        </label>
+        <span v-if="uploading" class="wi-loading spin">⚙️</span>
+      </div>
+      <label class="anon">
+        <input type="checkbox" v-model="form.anonymous" /> 匿名评价
+      </label>
+      <button
+        class="btn btn-primary btn-block"
+        :disabled="submitting || !form.star"
+        @click="submitReview"
+      >
+        {{ submitting ? '发布中…' : '发布评价' }}
+      </button>
+    </Sheet>
+
+    <!-- 举报 -->
+    <Sheet v-model="reportOpen" title="选择举报原因">
+      <div class="report-reasons">
+        <button
+          v-for="x in REPORT_REASONS"
+          :key="x"
+          class="reason-chip press"
+          @click="submitReport(x)"
+        >
+          {{ x }}
+        </button>
+      </div>
+    </Sheet>
+
+    <!-- 图片预览 -->
+    <transition name="fade">
+      <div v-if="preview" class="img-preview" @click="preview = ''">
+        <img :src="preview" />
+      </div>
+    </transition>
   </div>
 </template>
 
 <script>
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { showToast, showSuccessToast, showImagePreview } from 'vant';
 import { api, getToken, uploadImage } from '../api.js';
-import StarRating from '../components/StarRating.vue';
+import { foodMeta } from '../lib/foodMeta.js';
+import { toast } from '../lib/toast.js';
+import StarBar from '../components/StarBar.vue';
+import Sheet from '../components/Sheet.vue';
+
+const AVATARS = ['🐱', '🐻', '🦊', '🐼', '🐨', '🦁', '🐸', '🐵', '🐷', '🐰'];
+const REPORT_REASONS = ['内容违规', '广告 / 引流', '虚假信息', '不文明用语', '图片不当', '其他'];
+
+function emptyForm() {
+  return { star: 0, content: '', images: [], anonymous: false };
+}
 
 export default {
-  components: { StarRating },
+  components: { StarBar, Sheet },
   setup() {
     const route = useRoute();
     const router = useRouter();
-    const stall = ref(null);
+
+    const stall = ref({ distribution: {} });
     const reviews = ref([]);
-    const reviewShow = ref(false);
-    const reportShow = ref(false);
-    const reportReason = ref('');
-    const fileList = ref([]);
-    const form = ref({ star: 5, content: '', anonymous: false, images: [] });
+    const meta = computed(() => foodMeta(stall.value.category));
 
-    const PALETTES = [
-      'linear-gradient(135deg,#f6d365,#fda085)',
-      'linear-gradient(135deg,#fbc2eb,#a6c1ee)',
-      'linear-gradient(135deg,#ffecd2,#fcb69f)',
-      'linear-gradient(135deg,#a1c4fd,#c2e9fb)',
-      'linear-gradient(135deg,#d4fc79,#96e6a1)',
-    ];
-    const coverBg = computed(() => {
-      if (!stall.value) return '#eee';
-      let h = 0;
-      for (const ch of stall.value.name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-      return PALETTES[h % PALETTES.length];
-    });
+    const myVote = ref(0);
+    const myFav = ref(false);
 
-    const starsText = computed(() => starText(stall.value ? stall.value.rating_avg : 0));
-    function starText(s) {
-      let out = '';
-      for (let i = 1; i <= 5; i++) out += s >= i - 0.5 ? '★' : '☆';
-      return out;
-    }
-    function distWidth(star) {
-      const total = stall.value.rating_count || 0;
-      if (!total) return '0%';
-      return ((stall.value.distribution[star] / total) * 100).toFixed(1) + '%';
-    }
+    const reviewOpen = ref(false);
+    const reportOpen = ref(false);
+    const form = ref(emptyForm());
+    const submitting = ref(false);
+    const uploading = ref(false);
+    const preview = ref('');
 
     async function load() {
-      const d = await api(`/api/stalls/${route.params.id}`);
-      stall.value = d.stall;
-      const r = await api(`/api/stalls/${route.params.id}/reviews`);
-      reviews.value = r.reviews;
+      const r = await api(`/api/stalls/${route.params.id}`);
+      stall.value = r.stall;
+      myVote.value = r.stall.my_vote;
+      myFav.value = r.stall.my_favorite;
+      const rv = await api(`/api/stalls/${route.params.id}/reviews`);
+      reviews.value = rv.reviews;
     }
     onMounted(load);
 
-    function needLogin() {
-      if (!getToken()) {
-        showToast('请先登录');
-        router.push('/login');
-        return true;
-      }
-      return false;
+    function pct(i) {
+      const total = reviews.value.length || 1;
+      return Math.round(((stall.value.distribution?.[i] || 0) / total) * 100);
     }
 
-    async function vote(v) {
-      if (needLogin()) return;
-      const next = stall.value.my_vote === v ? 0 : v;
+    async function doVote(v) {
+      if (!guardLogin()) return;
+      const next = myVote.value === v ? 0 : v;
       const r = await api(`/api/stalls/${stall.value.id}/vote`, {
-        method: 'POST', body: { vote: next },
+        method: 'POST',
+        body: { vote: next },
       });
+      myVote.value = r.vote;
       stall.value.upvotes = r.upvotes;
       stall.value.downvotes = r.downvotes;
-      stall.value.my_vote = next;
     }
 
-    async function toggleFavorite() {
-      if (needLogin()) return;
+    async function doFav() {
+      if (!guardLogin()) return;
       const r = await api(`/api/stalls/${stall.value.id}/favorite`, { method: 'POST' });
-      stall.value.my_favorite = r.favorite;
-      showToast(r.favorite ? '已收藏' : '已取消收藏');
+      myFav.value = r.favorite;
+      toast[r.favorite ? 'success' : 'text'](r.favorite ? '已加入收藏' : '已取消收藏');
+    }
+
+    function guardLogin() {
+      if (!getToken()) {
+        toast.fail('请先登录');
+        router.push('/login');
+        return false;
+      }
+      return true;
     }
 
     function openReview() {
-      if (needLogin()) return;
-      form.value = { star: 5, content: '', anonymous: false, images: [] };
-      fileList.value = [];
-      reviewShow.value = true;
+      if (!guardLogin()) return;
+      const mine = reviews.value.find((x) => x.mine);
+      form.value = mine
+        ? { star: mine.star, content: mine.content, images: [...mine.images], anonymous: mine.anonymous }
+        : emptyForm();
+      reviewOpen.value = true;
     }
 
-    async function onUpload(item) {
+    async function pickImage(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      uploading.value = true;
       try {
-        const url = await uploadImage(item.file);
+        const url = await uploadImage(file);
         form.value.images.push(url);
-      } catch (e) {
-        showToast(e.message);
+      } catch {
+        toast.fail('图片上传失败');
+      } finally {
+        uploading.value = false;
+        e.target.value = '';
       }
     }
 
     async function submitReview() {
-      if (!form.value.star) return showToast('请选择星级');
-      await api(`/api/stalls/${stall.value.id}/reviews`, {
-        method: 'POST', body: form.value,
-      });
-      reviewShow.value = false;
-      showSuccessToast('评价已发布');
-      await load();
+      submitting.value = true;
+      try {
+        await api(`/api/stalls/${stall.value.id}/reviews`, {
+          method: 'POST',
+          body: { ...form.value },
+        });
+        toast.success('评价已发布');
+        reviewOpen.value = false;
+        await load();
+      } catch (e) {
+        toast.fail(e.message);
+      } finally {
+        submitting.value = false;
+      }
     }
 
-    async function toggleHelpful(rv) {
-      if (needLogin()) return;
+    async function doHelpful(rv) {
+      if (!guardLogin()) return;
       const r = await api(`/api/reviews/${rv.id}/helpful`, { method: 'POST' });
       rv.my_useful = r.helpful;
       rv.helpful_count += r.helpful ? 1 : -1;
     }
 
-    function preview(images, idx) {
-      showImagePreview({ images, startPosition: idx });
+    function openReport() {
+      if (!guardLogin()) return;
+      reportOpen.value = true;
     }
-
-    async function submitReport() {
-      if (needLogin()) return;
-      if (!reportReason.value) return showToast('请填写原因');
+    async function submitReport(reason) {
       await api('/api/reports', {
         method: 'POST',
-        body: { target_type: 'stall', target_id: stall.value.id, reason: reportReason.value },
+        body: { target_type: 'stall', target_id: stall.value.id, reason },
       });
-      showSuccessToast('举报已提交，管理员将复核');
-      reportReason.value = '';
-    }
-
-    function callPhone() {
-      location.href = 'tel:' + stall.value.phone;
-    }
-    function goDelivery() {
-      showToast(`请在${stall.value.delivery_platform}搜索「${stall.value.name}」`);
+      reportOpen.value = false;
+      toast.success('举报已提交，感谢监督');
     }
 
     return {
-      stall, reviews, coverBg, starsText, starText, distWidth,
-      vote, toggleFavorite, openReview, reviewShow, form, fileList, onUpload,
-      submitReview, toggleHelpful, preview, reportShow, reportReason, submitReport,
-      callPhone, goDelivery,
+      stall, reviews, meta, myVote, myFav,
+      reviewOpen, reportOpen, form, submitting, uploading, preview,
+      AVATARS, REPORT_REASONS, toast,
+      pct, doVote, doFav, openReview, pickImage, submitReview, doHelpful,
+      openReport, submitReport,
     };
   },
 };
 </script>
 
 <style scoped>
-.cover-big { height: 170px; display: flex; align-items: center; justify-content: center; }
-.cover-big img { width: 100%; height: 100%; object-fit: cover; }
-.big-char { font-size: 72px; color: rgba(255,255,255,0.9); font-weight: 800; }
-.info-card { background: #fff; padding: 14px 15px 10px; margin-bottom: 10px; }
-.title-row { display: flex; align-items: center; gap: 8px; }
-.title-row h2 { font-size: 20px; font-weight: 700; }
-.tag-out { font-size: 10px; color: #fff; background: #7232dd; border-radius: 3px; padding: 1px 6px; }
-.sub-row { display: flex; gap: 14px; margin-top: 6px; font-size: 13px; color: #646566; }
-.desc { font-size: 13px; color: #323233; margin-top: 10px; line-height: 1.7; }
-.hours { font-size: 12px; margin-top: 8px; }
-.dl-box { background: #fff8f2; border-radius: 6px; padding: 11px 13px; margin-top: 10px; }
-.dl-title { font-size: 13.5px; font-weight: 700; color: #ed6a0c; }
-.dl-meta { font-size: 12px; margin: 4px 0 9px; }
-.rate-card {
-  background: #fff;
-  border-radius: 8px;
-  margin: 0 12px 10px;
-  padding: 15px;
+/* 头图 */
+.hero {
+  position: relative;
+  height: 300px;
+  overflow: hidden;
+}
+.hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.hero-fallback {
+  position: absolute;
+  inset: 0;
   display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hero-emoji {
+  font-size: 110px;
+  filter: drop-shadow(0 14px 26px rgba(0, 0, 0, 0.22));
+}
+.hero-circle {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  pointer-events: none;
+}
+.hc1 { width: 180px; height: 180px; top: -70px; right: -50px; }
+.hc2 { width: 110px; height: 110px; bottom: 30px; left: -40px; }
+.back {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.28);
+  color: #fff;
+  font-size: 26px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 4px;
+  z-index: 2;
+}
+.hero-mask {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 40px 20px 18px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.55));
+  color: #fff;
+}
+.hero-mask h1 {
+  margin: 6px 0 0;
+  font-size: 27px;
+  font-weight: 900;
+}
+.hero-tag {
+  font-size: 11.5px;
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  padding: 3px 12px;
+}
+
+.body { padding: 16px 16px 90px; }
+
+/* 关键信息 */
+.quick {
+  display: flex;
+  align-items: center;
+  margin-top: -22px;
+  position: relative;
+  padding: 16px;
+}
+.q-item { flex: 1; text-align: center; }
+.q-item b { display: block; font-size: 19px; font-weight: 900; color: var(--primary-deep); }
+.q-hours { font-size: 14px !important; color: var(--ink) !important; }
+.q-item span { font-size: 11px; color: var(--ink-2); }
+.q-sep { width: 1px; height: 34px; background: var(--line); }
+.q-wide { flex: 1.6; }
+.addr {
+  font-size: 12.5px;
+  color: var(--ink-2);
+  margin: 10px 4px 0;
+}
+.addr a { color: var(--blue); }
+
+/* 评分 */
+.rate {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  margin-top: 14px;
   gap: 16px;
 }
-.rate-left { text-align: center; flex: none; width: 96px; }
-.big-score { font-size: 30px; font-weight: 800; }
-.dist { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
-.dist-row { display: flex; align-items: center; gap: 7px; font-size: 11.5px; }
-.d-star { width: 28px; color: #969799; }
-.bar { flex: 1; height: 7px; background: #f2f3f5; border-radius: 4px; overflow: hidden; }
-.bar-in { height: 100%; background: #ffb400; border-radius: 4px; }
-.d-count { width: 18px; text-align: right; color: #969799; }
-.action-grid { margin: 0 12px 6px; border-radius: 8px; overflow: hidden; }
-:deep(.active .van-grid-item__text) { color: #c0392b; }
-.section-title { display: flex; justify-content: space-between; align-items: center; margin: 14px 0 10px; }
-.review-list { padding: 0 12px; }
-.review-item { background: #fff; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; }
-.rv-head { display: flex; justify-content: space-between; align-items: center; }
-.rv-name { font-size: 13.5px; font-weight: 700; }
-.rv-stars { font-size: 12px; }
-.rv-content { font-size: 13px; line-height: 1.7; margin: 7px 0; }
-.rv-images { display: flex; gap: 7px; flex-wrap: wrap; margin: 7px 0; }
-.rv-foot { display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-top: 4px; }
-.helpful { color: #969799; }
-.helpful.on { color: #c0392b; }
-.review-form { padding: 18px 16px 24px; }
-.review-form h3 { text-align: center; margin-bottom: 14px; }
-.form-stars { text-align: center; margin-bottom: 10px; }
-.review-form .van-button { margin-top: 14px; }
+.rate-left {
+  text-align: center;
+  flex: none;
+}
+.big-score {
+  font-family: var(--font-black);
+  font-size: 38px;
+  line-height: 1;
+  color: var(--ink);
+}
+.dist { flex: 1; }
+.dist-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 4px;
+}
+.dist-n { font-size: 11px; color: var(--ink-2); width: 9px; }
+.dist-track {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: #f3ece4;
+  overflow: hidden;
+}
+.dist-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #ffd45e, var(--yellow-deep));
+}
+.dist-c { font-size: 11px; color: var(--ink-2); width: 16px; text-align: right; }
+
+/* 态度 */
+.actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 9px;
+  margin-top: 14px;
+}
+.act {
+  background: #fff;
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow-card);
+  padding: 11px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.act-ic { font-size: 20px; }
+.act.on {
+  background: var(--primary-soft);
+  color: var(--primary-deep);
+  animation: heartbeat 0.5s;
+}
+.act.down { background: #f2f3f5; }
+
+/* 介绍 / 外卖 */
+.intro,
+.delivery { padding: 16px 18px; margin-top: 14px; }
+.intro h3,
+.delivery h3 { margin: 0 0 7px; font-size: 15px; }
+.intro p { margin: 0; font-size: 13.5px; line-height: 1.8; color: #4a3f36; }
+.delivery {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.delivery p { margin: 0; }
+
+.write-entry {
+  color: var(--primary);
+  font-size: 12.5px;
+  font-weight: 800;
+}
+
+/* 评价 */
+.review { padding: 14px 16px; margin-bottom: 11px; }
+.rv-head { display: flex; align-items: center; gap: 10px; }
+.rv-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--bg-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 21px;
+  flex: none;
+}
+.rv-id { flex: 1; }
+.rv-name { font-size: 13.5px; font-weight: 800; }
+.rv-time { flex: none; }
+.rv-content { font-size: 13.5px; line-height: 1.75; margin: 9px 0; }
+.rv-images {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 9px;
+}
+.rv-images img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 9px;
+}
+.helpful {
+  font-size: 12px;
+  color: var(--ink-2);
+  background: var(--bg);
+  border-radius: 999px;
+  padding: 5px 13px;
+}
+.helpful.on { color: var(--primary); background: var(--primary-soft); }
+
+.fab {
+  position: fixed;
+  right: 18px;
+  bottom: 22px;
+  z-index: 90;
+  background: linear-gradient(135deg, #ff6a45, var(--primary-deep));
+  color: #fff;
+  border-radius: 999px;
+  padding: 13px 21px;
+  font-weight: 800;
+  box-shadow: var(--shadow-primary);
+}
+
+/* 写评价表单 */
+.sheet-h { text-align: center; font-size: 17px; margin: 4px 0 14px; }
+.write-stars { text-align: center; margin-bottom: 14px; }
+.write-area {
+  width: 100%;
+  background: #fff;
+  border-radius: var(--r-sm);
+  padding: 13px 15px;
+  box-shadow: var(--shadow-card);
+  line-height: 1.7;
+}
+.write-images { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+.wi-thumb {
+  position: relative;
+  width: 64px;
+  height: 64px;
+}
+.wi-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 11px;
+}
+.wi-thumb button {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.wi-add {
+  width: 64px;
+  height: 64px;
+  border-radius: 11px;
+  background: #fff;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: var(--ink-3);
+}
+.wi-loading { font-size: 28px; }
+.anon {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--ink-2);
+  margin-bottom: 14px;
+}
+
+/* 举报 */
+.report-reasons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  justify-content: center;
+}
+.reason-chip {
+  background: #fff;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: var(--shadow-card);
+}
+
+/* 图片预览 */
+.img-preview {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.img-preview img { max-width: 100%; max-height: 100%; border-radius: 6px; }
 </style>
