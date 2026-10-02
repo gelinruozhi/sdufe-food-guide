@@ -48,8 +48,16 @@ export function optionalAuth(req, _res, next) {
 }
 
 export function requireAdmin(req, res, next) {
-  if (!req.user || req.user.role !== 'admin') {
+  if (!req.user || !['admin', 'root'].includes(req.user.role)) {
     return res.status(403).json({ error: '需要管理员权限' });
+  }
+  next();
+}
+
+// 仅根管理员（可管理其他管理员）
+export function requireRoot(req, res, next) {
+  if (!req.user || req.user.role !== 'root') {
+    return res.status(403).json({ error: '需要根管理员权限' });
   }
   next();
 }

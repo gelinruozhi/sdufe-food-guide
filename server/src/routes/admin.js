@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../db.js';
-import { verifyToken, requireAdmin } from '../auth.js';
+import { verifyToken, requireAdmin, requireRoot } from '../auth.js';
 
 const r = Router();
 r.use(verifyToken, requireAdmin);
@@ -152,6 +152,40 @@ r.post('/feedback/:id/handle', (req, res) => {
      handled_at=datetime('now','localtime') WHERE id=?`,
   ).run(reply, f.id);
   res.json({ ok: true, status: 'handled' });
+});
+
+// ===== 管理员管理（仅根管理员）=====
+// 管理员列表
+r.get('/admins', requireRoot, (_req, res) => {
+  const rows = db
+    .prepare(
+      `SELECT id, username, nickname, role, created_at FROM users
+       WHERE role IN ('admin','root') ORDER BY role DESC, id`,
+    )
+    .all();
+  res.json({ admins: rows });
+});
+
+// 提升普通用户为管理员
+r.post('/admins/promote', requireRoot, (req, res) => {
+  const username = String((req.body || {}).username || '').trim();
+  if (!username) return res.status(400).json({ error: '请输入用户名' });
+  const u = db.prepare('SELECT * FROM users WHERE username=?').get(username);
+  if (!u) return res.status(404).json({ error: '该用户不存在' });
+  if (u.role === 'root') return res.status(400).json({ error: '该账号已是根管理员' });
+  if (u.role === 'admin') return res.status(400).json({ error: '该账号已是管理员' });
+  db.prepare("UPDATE users SET role='admin' WHERE id=?").run(u.id);
+  res.json({ ok: true });
+});
+
+// 撤销普通管理员（根管理员不可被撤销）
+r.post('/admins/:id/demote', requireRoot, (req, res) => {
+  const u = db.prepare('SELECT * FROM users WHERE id=?').get(req.params.id);
+  if (!u) return res.status(404).json({ error: '用户不存在' });
+  if (u.role === 'root') return res.status(400).json({ error: '根管理员不可被撤销' });
+  if (u.role !== 'admin') return res.status(400).json({ error: '该账号不是管理员' });
+  db.prepare("UPDATE users SET role='user' WHERE id=?").run(u.id);
+  res.json({ ok: true });
 });
 
 export default r;

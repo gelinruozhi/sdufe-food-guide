@@ -7,7 +7,8 @@
       <template v-if="user">
         <h1 class="pf-name">
           {{ user.nickname }}
-          <span v-if="user.role === 'admin'" class="pf-badge">管理员</span>
+          <span v-if="user.role === 'root'" class="pf-badge">根管理员</span>
+          <span v-else-if="user.role === 'admin'" class="pf-badge">管理员</span>
         </h1>
         <p class="pf-user">
           @{{ user.username }} ·
@@ -59,7 +60,11 @@
           <Icon name="doc" :size="20" class="mi-ic mi-doc" /> 内容声明与免责
           <Icon name="next" :size="17" class="mi-arrow" />
         </router-link>
-        <router-link v-if="user.role === 'admin'" class="menu-item admin" to="/admin">
+        <router-link
+          v-if="user.role === 'admin' || user.role === 'root'"
+          class="menu-item admin"
+          to="/admin"
+        >
           <Icon name="shield" :size="20" class="mi-ic" /> 管理审核后台
           <Icon name="next" :size="17" class="mi-arrow" />
         </router-link>

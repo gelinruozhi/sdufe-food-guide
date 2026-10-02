@@ -20,7 +20,7 @@
       <!-- Tabs -->
       <div class="ad-tabs no-scrollbar">
         <button
-          v-for="(t, i) in TABS"
+          v-for="(t, i) in tabs"
           :key="t.k"
           class="ad-tab"
           :class="{ on: active === i }"
@@ -162,13 +162,47 @@
           </div>
           <Empty v-if="!feedback.length" icon="chat" text="暂无反馈" />
         </template>
+
+        <!-- 管理员管理（仅根管理员） -->
+        <template v-if="active === 5">
+          <div class="am-promote panel">
+            <b class="ap-title">添加普通管理员</b>
+            <p class="muted tiny ap-note">
+              输入已注册同学的用户名。提升后其可进入管理审核、处理内容，但不能再管理其他管理员。
+            </p>
+            <div class="ap-row">
+              <input
+                v-model="promoteName"
+                class="ap-input"
+                placeholder="用户名，如 xiaoming"
+                maxlength="20"
+                @keyup.enter="promote"
+              />
+              <button class="btn btn-acid btn-sm" @click="promote">添加</button>
+            </div>
+          </div>
+
+          <div v-for="a in admins" :key="a.id" class="am-row panel">
+            <div class="ar-info">
+              <b>{{ a.nickname || a.username }}</b>
+              <span class="muted tiny">
+                @{{ a.username }} · {{ a.role === 'root' ? '根管理员' : '普通管理员' }}
+              </span>
+            </div>
+            <button v-if="a.role === 'admin'" class="btn btn-sm btn-hot" @click="demote(a)">
+              撤销管理员
+            </button>
+            <span v-else class="ar-root-tag">ROOT</span>
+          </div>
+          <Empty v-if="!admins.length" icon="user" text="暂无管理员数据" />
+        </template>
       </div>
     </template>
   </div>
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import { api } from '../api.js';
 import { toast } from '../lib/toast.js';
 import Icon from '../components/Icon.vue';
@@ -197,6 +231,12 @@ export default {
     const reports = ref([]);
     const feedback = ref([]);
     const replyDrafts = reactive({});
+    const myRole = ref('');
+    const admins = ref([]);
+    const promoteName = ref('');
+    const tabs = computed(() =>
+      myRole.value === 'root' ? [...TABS, { k: 'admins', label: '管理员' }] : TABS,
+    );
     const TYPE_TEXT = {
       suggestion: '产品建议',
       bug: '问题 / Bug',
@@ -212,18 +252,28 @@ export default {
 
     async function load() {
       try {
-        const [s, p, c, r, fb] = await Promise.all([
+        const [s, p, c, r, fb, me] = await Promise.all([
           api('/api/admin/stats'),
           api('/api/admin/pending-stalls'),
           api('/api/admin/corrections'),
           api('/api/admin/reports'),
           api('/api/admin/feedback'),
+          api('/api/auth/me'),
         ]);
         stats.value = Object.values(s.stats);
         pending.value = p.stalls;
         corrections.value = c.corrections;
         reports.value = r.reports;
         feedback.value = fb.feedback;
+        myRole.value = me.user.role;
+        if (me.user.role === 'root') {
+          try {
+            const a = await api('/api/admin/admins');
+            admins.value = a.admins;
+          } catch {
+            admins.value = [];
+          }
+        }
       } catch {
         forbidden.value = true;
       }
@@ -284,11 +334,42 @@ export default {
       await load();
     }
 
+    async function promote() {
+      const username = promoteName.value.trim();
+      if (!username) {
+        toast.fail('请输入用户名');
+        return;
+      }
+      try {
+        await api('/api/admin/admins/promote', {
+          method: 'POST',
+          body: { username },
+        });
+        toast.success('已添加为管理员');
+        promoteName.value = '';
+        await load();
+      } catch (e) {
+        toast.fail((e.data && e.data.error) || e.message);
+      }
+    }
+    async function demote(a) {
+      try {
+        await api(`/api/admin/admins/${a.id}/demote`, {
+          method: 'POST',
+          body: {},
+        });
+        toast('已撤销管理员');
+        await load();
+      } catch (e) {
+        toast.fail((e.data && e.data.error) || e.message);
+      }
+    }
+
     return {
       TABS, STAT_LABELS, active, forbidden, stats, pending, corrections, reports,
-      feedback, replyDrafts,
+      feedback, replyDrafts, tabs, myRole, admins, promoteName,
       badge, approve, reject, handleCorrection, handleReport,
-      typeText, openImg, handleFeedback, reopenFeedback,
+      typeText, openImg, handleFeedback, reopenFeedback, promote, demote,
     };
   },
 };
@@ -533,5 +614,69 @@ export default {
 .fb-reply-input:focus {
   border-color: var(--acid);
   outline: none;
+}
+
+/* 管理员管理 */
+.am-promote {
+  margin: 0 0 14px;
+  padding: 15px 16px;
+}
+.ap-title {
+  font-size: 15px;
+}
+.ap-note {
+  line-height: 1.7;
+  margin: 8px 0 13px;
+}
+.ap-row {
+  display: flex;
+  gap: 9px;
+}
+.ap-input {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-2);
+  border: 2px solid var(--line);
+  border-radius: 4px;
+  color: var(--ink);
+  font-size: 13px;
+  font-family: inherit;
+  padding: 9px 11px;
+}
+.ap-input:focus {
+  border-color: var(--acid);
+  outline: none;
+}
+.ap-row .btn {
+  flex: none;
+}
+.am-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 13px 15px;
+  margin-bottom: 11px;
+}
+.ar-info {
+  min-width: 0;
+}
+.ar-info b {
+  font-size: 14px;
+  display: block;
+}
+.ar-info span {
+  display: block;
+  margin-top: 3px;
+}
+.ar-root-tag {
+  flex: none;
+  font-family: var(--font-en);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--acid);
+  border: 1.5px solid var(--line);
+  border-radius: 2px;
+  padding: 3px 9px;
 }
 </style>

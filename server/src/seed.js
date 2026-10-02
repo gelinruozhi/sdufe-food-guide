@@ -25,7 +25,7 @@ db.prepare("DELETE FROM sqlite_sequence WHERE name IN ('reviews','stall_votes','
 
 // ===== 用户 =====
 const users = [
-  ['admin', 'admin123', '管理员', 'admin'],
+  ['admin', 'admin123', '根管理员', 'root'],
   ['xiaoming', '123456', '小明爱干饭', 'user'],
   ['foodie', '123456', '山财美食家', 'user'],
   ['ergou', '123456', '二狗', 'user'],
