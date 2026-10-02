@@ -133,6 +133,7 @@
     <!-- 写评价 -->
     <Sheet v-model="reviewOpen">
       <h3 class="sheet-h">为「{{ stall.name }}」打分</h3>
+      <p class="subjective-tip">请基于真实体验打分，评价是你的个人主观感受</p>
       <div class="write-stars">
         <StarBar v-model="form.star" :size="38" show-label />
       </div>
@@ -659,7 +660,13 @@ export default {
 .sheet-h {
   text-align: center;
   font-size: 16px;
-  margin-bottom: 15px;
+  margin-bottom: 8px;
+}
+.subjective-tip {
+  text-align: center;
+  font-size: 11px;
+  color: var(--cyan);
+  margin: 0 0 14px;
 }
 .write-stars {
   text-align: center;

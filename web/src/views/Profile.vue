@@ -51,6 +51,10 @@
           <Icon name="inbox" :size="20" class="mi-ic" /> 我的投稿与纠错
           <Icon name="next" :size="17" class="mi-arrow" />
         </router-link>
+        <router-link class="menu-item" to="/disclaimer">
+          <Icon name="doc" :size="20" class="mi-ic mi-doc" /> 内容声明与免责
+          <Icon name="next" :size="17" class="mi-arrow" />
+        </router-link>
         <router-link v-if="user.role === 'admin'" class="menu-item admin" to="/admin">
           <Icon name="shield" :size="20" class="mi-ic" /> 管理审核后台
           <Icon name="next" :size="17" class="mi-arrow" />
@@ -212,6 +216,9 @@ export default {
 }
 .menu-item.admin .mi-ic {
   color: var(--hot);
+}
+.mi-doc {
+  color: var(--cyan);
 }
 .mi-arrow {
   margin-left: auto;

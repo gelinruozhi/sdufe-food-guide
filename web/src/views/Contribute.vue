@@ -147,6 +147,10 @@
         </template>
       </div>
 
+      <p v-if="step === 2" class="agree-tip">
+        提交即表示内容基于你的真实体验，你对其真实性负责
+      </p>
+
       <!-- 底部导航按钮 -->
       <div class="nav-btns" v-if="!done">
         <button v-if="step > 0" class="btn btn-ghost" @click="step--">上一步</button>
@@ -545,6 +549,13 @@ export default {
   font-size: 13px;
   line-height: 1.8;
   margin: 0 0 24px;
+}
+.agree-tip {
+  text-align: center;
+  font-size: 11px;
+  color: var(--cyan);
+  line-height: 1.6;
+  margin: 0 4px;
 }
 .mt {
   margin-top: 11px;
