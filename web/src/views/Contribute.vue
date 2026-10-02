@@ -1,6 +1,9 @@
 <template>
   <div class="contrib">
     <header class="cb-hero">
+      <button class="cb-back" @click="goBack">
+        <Icon name="back" :size="20" />
+      </button>
       <span class="cb-kicker">CONTRIBUTE / 共建</span>
       <h1 class="cb-title">投稿<br />共建</h1>
       <p>每一个被你发现的美味，都值得被更多人看到</p>
@@ -187,6 +190,7 @@
 
 <script>
 import { ref, reactive, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { api, getToken } from '../api.js';
 import { toast } from '../lib/toast.js';
 import Icon from '../components/Icon.vue';
@@ -218,6 +222,7 @@ function blank() {
 export default {
   components: { Icon },
   setup() {
+    const router = useRouter();
     const logged = ref(!!getToken());
     const step = ref(0);
     const done = ref(false);
@@ -267,9 +272,15 @@ export default {
       done.value = false;
     }
 
+    function goBack() {
+      // 有上一页则返回；直接打开/刷新无历史时回首页，避免页面卡死
+      if (window.history.state && window.history.state.back) router.back();
+      else router.push('/');
+    }
+
     return {
       logged, step, done, submitting, form, canteens, floors,
-      CAT_HINTS, canNext, selectCanteen, submit, reset,
+      CAT_HINTS, canNext, selectCanteen, submit, reset, goBack,
     };
   },
 };
@@ -287,6 +298,22 @@ export default {
   font-family: var(--font-en);
   font-size: 11px;
   color: var(--acid);
+}
+.cb-back {
+  width: 38px;
+  height: 38px;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  background: var(--bg-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+.cb-back:active {
+  background: var(--hot);
+  color: #fff;
+  border-color: #000;
 }
 .cb-title {
   font-size: 40px;
