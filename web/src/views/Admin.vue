@@ -50,7 +50,7 @@
                 <b>{{ s.name }}</b>
                 <span class="muted tiny">
                   {{ s.stall_type === 'inside' ? '校内' : '校外' }} · {{ s.category }} ·
-                  ¥{{ s.avg_price }} · {{ s.creator_name }} 投稿
+                  ￥{{ s.avg_price }} · {{ s.creator_name }} 投稿
                 </span>
               </div>
             </div>

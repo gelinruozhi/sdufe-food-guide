@@ -23,7 +23,7 @@
       <!-- 关键信息 -->
       <div class="quick panel">
         <div class="q-item">
-          <b>¥{{ stall.avg_price }}</b><span>人均</span>
+          <b>￥{{ stall.avg_price }}</b><span>人均</span>
         </div>
         <div class="q-sep" />
         <div class="q-item q-wide">
@@ -86,7 +86,7 @@
         <div class="dl-info">
           <h3>外卖点单</h3>
           <p class="muted tiny">
-            {{ stall.delivery_platform }} · 起送 ¥{{ stall.min_order }} · 配送 ¥{{ stall.delivery_fee }}
+            {{ stall.delivery_platform }} · 起送 ￥{{ stall.min_order }} · 配送 ￥{{ stall.delivery_fee }}
           </p>
         </div>
         <button class="btn btn-volt btn-sm" @click="toast('演示环境未接入真实下单')">去点单</button>
@@ -115,6 +115,8 @@
             v-for="(im, k) in rv.images"
             :key="k"
             :src="im"
+            loading="lazy"
+            decoding="async"
             @click="preview = im"
           />
         </div>
@@ -636,6 +638,7 @@ export default {
 .fab {
   position: fixed;
   right: 16px;
+  right: max(16px, calc((100vw - 520px) / 2 + 16px));
   bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0) + 16px);
   z-index: 90;
   background: var(--acid);

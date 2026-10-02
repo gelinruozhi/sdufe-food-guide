@@ -78,7 +78,7 @@ body::after {
   content: '';
   position: fixed;
   inset: 0;
-  z-index: 600;
+  z-index: 1500;
   opacity: 0.05;
   pointer-events: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
@@ -87,6 +87,7 @@ body::after {
 #app {
   max-width: 520px;
   min-height: 100vh;
+  min-height: 100dvh;
   margin: 0 auto;
   position: relative;
 }
@@ -147,17 +148,26 @@ h3 {
   font-family: var(--font-en);
   line-height: 0.92;
   letter-spacing: -0.02em;
+  font-size: 48px;
   font-size: clamp(44px, 15vw, 76px);
   text-transform: uppercase;
 }
-/* 描边轮廓字 */
+/* 描边轮廓字（不支持 text-stroke 的浏览器降级为实色，避免文字消失） */
 .stroke-text {
-  color: transparent;
-  -webkit-text-stroke: 1.5px var(--ink);
+  color: var(--ink);
 }
 .stroke-acid {
-  color: transparent;
-  -webkit-text-stroke: 1.5px var(--acid);
+  color: var(--acid);
+}
+@supports ((-webkit-text-stroke: 1px #000) or (text-stroke: 1px #000)) {
+  .stroke-text {
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--ink);
+  }
+  .stroke-acid {
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--acid);
+  }
 }
 
 /* ============================================================
@@ -455,6 +465,19 @@ textarea.field {
 }
 .gap {
   gap: 10px;
+}
+
+/* 页面切到后台 / 锁屏时暂停全部动画，省电（配合 main.js 的 visibilitychange） */
+.page-hidden *,
+.page-hidden *::before,
+.page-hidden *::after {
+  animation-play-state: paused !important;
+}
+
+/* 键盘导航的可见焦点（不影响鼠标用户，不占布局） */
+:focus-visible {
+  outline: 2px solid var(--acid);
+  outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {

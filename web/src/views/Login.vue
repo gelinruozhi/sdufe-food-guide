@@ -93,6 +93,7 @@ export default {
 <style scoped>
 .auth-page {
   min-height: 100vh;
+  min-height: 100dvh;
   padding: 70px 24px 30px;
   text-align: center;
 }

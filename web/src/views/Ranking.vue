@@ -36,11 +36,11 @@
         <div class="rk-info">
           <div class="rk-name">{{ s.name }}</div>
           <div class="rk-desc muted tiny">
-            {{ s.category }} · {{ s.rating_count }} 评价 · ¥{{ s.avg_price }}
+            {{ s.category }} · {{ s.rating_count }} 评价 · ￥{{ s.avg_price }}
           </div>
         </div>
         <div class="rk-score" :class="{ blacklist: tab === 'bottom' }">
-          <Icon name="starFill" :size="13" />
+          <Icon name="starFill" :size="11" />
           {{ s.rating_avg }}
         </div>
       </div>
@@ -167,7 +167,7 @@ export default {
 .rk-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   padding: 12px 0;
   border-bottom: 1.5px solid var(--line);
 }
@@ -176,9 +176,9 @@ export default {
 }
 .rk-no {
   font-family: var(--font-en);
-  font-size: 19px;
+  font-size: 17px;
   color: var(--ink-3);
-  width: 34px;
+  width: 28px;
   flex: none;
 }
 .rk-no.hot3 {
@@ -188,8 +188,8 @@ export default {
   color: var(--hot);
 }
 .rk-art {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   flex: none;
   border: 2px solid #000;
   border-radius: 3px;
@@ -213,10 +213,10 @@ export default {
   flex: none;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 14px;
+  font-size: 12.5px;
   color: var(--acid);
 }
 .rk-score.blacklist {

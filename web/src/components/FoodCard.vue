@@ -5,7 +5,13 @@
     :style="{ boxShadow: `4px 4px 0 ${SHADOWS[index % SHADOWS.length]}` }"
   >
     <div class="fc-art">
-      <img v-if="stall.cover" :src="stall.cover" :alt="stall.name" />
+      <img
+        v-if="stall.cover"
+        :src="stall.cover"
+        :alt="stall.name"
+        loading="lazy"
+        decoding="async"
+      />
       <FoodArt v-else :category="stall.category" icon-size="44" spark-size="13" />
     </div>
     <div class="fc-body">
@@ -25,7 +31,7 @@
       </div>
       <div class="fc-foot">
         <span class="fc-cat">{{ stall.category }}</span>
-        <span class="fc-price">¥{{ stall.avg_price }}<i>/人</i></span>
+        <span class="fc-price">￥{{ stall.avg_price }}<i>/人</i></span>
       </div>
     </div>
   </router-link>

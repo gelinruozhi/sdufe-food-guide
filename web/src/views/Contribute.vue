@@ -107,7 +107,7 @@
         </div>
         <div class="two-col">
           <div>
-            <label class="f-label">人均价 ¥</label>
+            <label class="f-label">人均价 ￥</label>
             <input v-model.number="form.avg_price" type="number" min="0" class="field" placeholder="如 12" />
           </div>
           <div>
@@ -135,11 +135,11 @@
             <input v-model="form.delivery_platform" class="field" placeholder="美团 / 饿了么" />
             <div class="two-col mt">
               <div>
-                <label class="f-label">起送价 ¥</label>
+                <label class="f-label">起送价 ￥</label>
                 <input v-model.number="form.min_order" type="number" min="0" class="field" />
               </div>
               <div>
-                <label class="f-label">配送费 ¥</label>
+                <label class="f-label">配送费 ￥</label>
                 <input v-model.number="form.delivery_fee" type="number" min="0" class="field" />
               </div>
             </div>

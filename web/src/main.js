@@ -34,4 +34,10 @@ app.directive('rise', {
   },
 });
 
+// 页面隐藏（切标签 / 最小化 / 锁屏）时给根节点挂 class，
+// 由 CSS 暂停所有无限动画，降低后台耗电；重新可见时自动恢复。
+document.addEventListener('visibilitychange', () => {
+  document.documentElement.classList.toggle('page-hidden', document.hidden);
+});
+
 app.use(router).mount('#app');
