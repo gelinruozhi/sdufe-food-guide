@@ -14,6 +14,7 @@ import voteRoutes from './routes/votes.js';
 import contributeRoutes from './routes/contribute.js';
 import adminRoutes from './routes/admin.js';
 import uploadRoutes from './routes/upload.js';
+import feedbackRoutes from './routes/feedback.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -44,6 +45,7 @@ app.post('/api/reports', verifyToken, (req, res) => {
 });
 app.use('/api/stalls', stallRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/feedback', feedbackRoutes);
 app.use('/api', uploadRoutes);
 
 app.get('/api/health', (_req, res) => res.json({ ok: true, name: 'sdufe-food-guide' }));

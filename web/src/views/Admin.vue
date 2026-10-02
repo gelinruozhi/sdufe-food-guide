@@ -99,13 +99,76 @@
           </div>
           <Empty v-if="!reports.length" icon="flag" text="暂无待处理举报" />
         </template>
+
+        <!-- 意见反馈 -->
+        <template v-if="active === 4">
+          <div v-for="f in feedback" :key="f.id" class="audit panel fb-audit">
+            <div class="au-head">
+              <span class="fb-avatar"><Icon name="user" :size="22" /></span>
+              <div class="au-id">
+                <b>{{ f.user_name || '未登录用户' }}</b>
+                <span class="muted tiny">
+                  {{ typeText(f.type) }} · {{ f.created_at }}
+                  <template v-if="f.contact"> · {{ f.contact }}</template>
+                </span>
+              </div>
+              <span class="fb-state" :class="f.status">
+                {{ f.status === 'handled' ? '已处理' : '待处理' }}
+              </span>
+            </div>
+            <p class="au-desc fb-content">{{ f.content }}</p>
+            <div v-if="f.images.length" class="fb-imgs">
+              <img
+                v-for="(im, k) in f.images"
+                :key="k"
+                :src="im"
+                loading="lazy"
+                decoding="async"
+                @click="openImg(im)"
+              />
+            </div>
+            <div v-if="f.reply" class="fb-old-reply">已回复：{{ f.reply }}</div>
+            <textarea
+              v-if="f.status === 'pending'"
+              v-model="replyDrafts[f.id]"
+              class="fb-reply-input"
+              rows="2"
+              maxlength="500"
+              placeholder="回复内容（可选，会展示给该同学）"
+            />
+            <div class="au-btns">
+              <button
+                v-if="f.status === 'pending'"
+                class="btn btn-sm btn-acid"
+                @click="handleFeedback(f, true)"
+              >
+                <Icon name="check" :size="13" /> 回复并处理
+              </button>
+              <button
+                v-if="f.status === 'pending'"
+                class="btn btn-sm btn-ghost"
+                @click="handleFeedback(f, false)"
+              >
+                仅标记已处理
+              </button>
+              <button
+                v-if="f.status === 'handled'"
+                class="btn btn-sm btn-ghost"
+                @click="reopenFeedback(f)"
+              >
+                重新打开
+              </button>
+            </div>
+          </div>
+          <Empty v-if="!feedback.length" icon="chat" text="暂无反馈" />
+        </template>
       </div>
     </template>
   </div>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import { api } from '../api.js';
 import { toast } from '../lib/toast.js';
 import Icon from '../components/Icon.vue';
@@ -117,6 +180,7 @@ const TABS = [
   { k: 'pending', label: '待审' },
   { k: 'corrections', label: '纠错' },
   { k: 'reports', label: '举报' },
+  { k: 'feedback', label: '反馈' },
 ];
 const STAT_LABELS = [
   '注册用户', '已收录窗口', '待审核', '评价总数', '待处理纠错', '待处理举报',
@@ -131,19 +195,35 @@ export default {
     const pending = ref([]);
     const corrections = ref([]);
     const reports = ref([]);
+    const feedback = ref([]);
+    const replyDrafts = reactive({});
+    const TYPE_TEXT = {
+      suggestion: '产品建议',
+      bug: '问题 / Bug',
+      content: '内容问题',
+      other: '其他',
+    };
+    function typeText(v) {
+      return TYPE_TEXT[v] || '其他';
+    }
+    function openImg(url) {
+      window.open(url, '_blank');
+    }
 
     async function load() {
       try {
-        const [s, p, c, r] = await Promise.all([
+        const [s, p, c, r, fb] = await Promise.all([
           api('/api/admin/stats'),
           api('/api/admin/pending-stalls'),
           api('/api/admin/corrections'),
           api('/api/admin/reports'),
+          api('/api/admin/feedback'),
         ]);
         stats.value = Object.values(s.stats);
         pending.value = p.stalls;
         corrections.value = c.corrections;
         reports.value = r.reports;
+        feedback.value = fb.feedback;
       } catch {
         forbidden.value = true;
       }
@@ -154,6 +234,8 @@ export default {
       if (k === 'pending') return pending.value.length;
       if (k === 'corrections') return corrections.value.length;
       if (k === 'reports') return reports.value.length;
+      if (k === 'feedback')
+        return feedback.value.filter((x) => x.status === 'pending').length;
       return 0;
     }
 
@@ -184,9 +266,29 @@ export default {
       await load();
     }
 
+    async function handleFeedback(f, withReply) {
+      const reply = withReply ? replyDrafts[f.id] || '' : '';
+      await api(`/api/admin/feedback/${f.id}/handle`, {
+        method: 'POST',
+        body: { reply },
+      });
+      toast.success('已处理');
+      await load();
+    }
+    async function reopenFeedback(f) {
+      await api(`/api/admin/feedback/${f.id}/handle`, {
+        method: 'POST',
+        body: { action: 'reopen' },
+      });
+      toast('已重新打开');
+      await load();
+    }
+
     return {
       TABS, STAT_LABELS, active, forbidden, stats, pending, corrections, reports,
+      feedback, replyDrafts,
       badge, approve, reject, handleCorrection, handleReport,
+      typeText, openImg, handleFeedback, reopenFeedback,
     };
   },
 };
@@ -360,5 +462,76 @@ export default {
 }
 .au-btns .btn {
   flex: 1;
+}
+
+/* 意见反馈 */
+.fb-avatar {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border: 2px solid #000;
+  border-radius: 3px;
+  background: var(--bg-2);
+  color: var(--acid);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.fb-state {
+  flex: none;
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 800;
+}
+.fb-state.pending {
+  color: var(--orange);
+}
+.fb-state.handled {
+  color: var(--acid);
+}
+.fb-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.fb-imgs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 0;
+}
+.fb-imgs img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border: 1.5px solid var(--ink);
+  border-radius: 3px;
+}
+.fb-old-reply {
+  margin-top: 11px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--ink-1);
+  border-left: 4px solid var(--cyan);
+  background: var(--bg-2);
+  border-radius: 0 3px 3px 0;
+  padding: 8px 11px;
+}
+.fb-reply-input {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 12px;
+  background: var(--bg-2);
+  border: 2px solid var(--line);
+  border-radius: 4px;
+  color: var(--ink);
+  font-size: 13px;
+  font-family: inherit;
+  line-height: 1.6;
+  padding: 9px 11px;
+  resize: vertical;
+}
+.fb-reply-input:focus {
+  border-color: var(--acid);
+  outline: none;
 }
 </style>

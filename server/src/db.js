@@ -123,6 +123,19 @@ CREATE TABLE IF NOT EXISTS reports (
   status TEXT DEFAULT 'pending',
   created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
 );
+
+CREATE TABLE IF NOT EXISTS feedback (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER,
+  type TEXT NOT NULL DEFAULT 'suggestion',
+  content TEXT NOT NULL,
+  contact TEXT,
+  images TEXT,
+  status TEXT NOT NULL DEFAULT 'pending',
+  reply TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+  handled_at TEXT
+);
 `);
 
 // 贝叶斯评分参数

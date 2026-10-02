@@ -117,4 +117,41 @@ r.post('/reports/:id/handle', (req, res) => {
   res.json({ ok: true });
 });
 
+// 意见反馈列表（默认全部，?status=pending 只看待处理）
+r.get('/feedback', (req, res) => {
+  const onlyPending = (req.query || {}).status === 'pending';
+  const sql = `SELECT f.*, u.nickname AS user_name, u.username AS user_login
+    FROM feedback f LEFT JOIN users u ON u.id=f.user_id
+    ${onlyPending ? "WHERE f.status='pending'" : ''} ORDER BY f.id DESC`;
+  const rows = db.prepare(sql).all();
+  res.json({
+    feedback: rows.map((x) => {
+      let images = [];
+      try {
+        images = JSON.parse(x.images || '[]');
+      } catch {
+        images = [];
+      }
+      return { ...x, images };
+    }),
+  });
+});
+
+// 处理 / 回复反馈：body { reply } 标记已处理；body { action:'reopen' } 重新打开
+r.post('/feedback/:id/handle', (req, res) => {
+  const f = db.prepare('SELECT * FROM feedback WHERE id=?').get(req.params.id);
+  if (!f) return res.status(404).json({ error: '反馈不存在' });
+  const body = req.body || {};
+  if (body.action === 'reopen') {
+    db.prepare("UPDATE feedback SET status='pending', handled_at=NULL WHERE id=?").run(f.id);
+    return res.json({ ok: true, status: 'pending' });
+  }
+  const reply = body.reply ? String(body.reply).slice(0, 500) : null;
+  db.prepare(
+    `UPDATE feedback SET status='handled', reply=?,
+     handled_at=datetime('now','localtime') WHERE id=?`,
+  ).run(reply, f.id);
+  res.json({ ok: true, status: 'handled' });
+});
+
 export default r;

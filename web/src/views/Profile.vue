@@ -51,6 +51,10 @@
           <Icon name="inbox" :size="20" class="mi-ic" /> 我的投稿与纠错
           <Icon name="next" :size="17" class="mi-arrow" />
         </router-link>
+        <router-link class="menu-item" to="/feedback">
+          <Icon name="edit" :size="20" class="mi-ic" /> 意见反馈
+          <Icon name="next" :size="17" class="mi-arrow" />
+        </router-link>
         <router-link class="menu-item" to="/disclaimer">
           <Icon name="doc" :size="20" class="mi-ic mi-doc" /> 内容声明与免责
           <Icon name="next" :size="17" class="mi-arrow" />
@@ -69,6 +73,7 @@
       <button class="btn btn-outline btn-block mt" @click="$router.push('/register')">
         没有账号，去注册
       </button>
+      <router-link to="/feedback" class="guest-feedback muted tiny">意见反馈</router-link>
     </div>
   </div>
 </template>
@@ -230,6 +235,11 @@ export default {
 }
 .pf-guest {
   padding: 26px 16px;
+}
+.guest-feedback {
+  display: block;
+  text-align: center;
+  margin-top: 17px;
 }
 .mt {
   margin-top: 11px;

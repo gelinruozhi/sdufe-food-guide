@@ -15,6 +15,7 @@ const routes = [
   { path: '/my-contributions', component: () => import('./views/MyContributions.vue') },
   { path: '/admin', component: () => import('./views/Admin.vue') },
   { path: '/disclaimer', component: () => import('./views/Disclaimer.vue') },
+  { path: '/feedback', component: () => import('./views/Feedback.vue') },
 ];
 
 export default createRouter({
