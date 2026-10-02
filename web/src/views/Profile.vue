@@ -1,23 +1,29 @@
 <template>
   <div class="profile">
     <header class="pf-hero">
-      <div class="pf-avatar float">🍜</div>
+      <div class="pf-avatar floaty">
+        <Icon name="user" :size="44" :stroke-width="2.2" />
+      </div>
       <template v-if="user">
         <h1 class="pf-name">
           {{ user.nickname }}
           <span v-if="user.role === 'admin'" class="pf-badge">管理员</span>
         </h1>
-        <p class="pf-user">@{{ user.username }} · 信用分 {{ user.credit_score }}</p>
+        <p class="pf-user">
+          @{{ user.username }} ·
+          <Icon name="bolt" :size="13" class="pf-bolt" /> 信用 {{ user.credit_score }}
+        </p>
       </template>
       <template v-else>
         <h1 class="pf-name">未登录</h1>
         <p class="pf-user">登录后查看你的干饭档案</p>
       </template>
+      <Icon name="sparkle" :size="18" class="pf-deco floaty" />
     </header>
 
     <template v-if="user">
       <!-- 干饭数据 -->
-      <div class="stats card">
+      <div class="stats panel">
         <div class="stat">
           <b>{{ counts.reviews }}</b><span>我的评价</span>
         </div>
@@ -32,32 +38,30 @@
       </div>
 
       <!-- 菜单 -->
-      <div class="menu card">
-        <router-link class="menu-item press" to="/my-reviews">
-          <span class="mi-ic">💬</span>我的评价<span class="mi-arrow">›</span>
+      <div class="menu panel">
+        <router-link class="menu-item" to="/my-reviews">
+          <Icon name="chat" :size="20" class="mi-ic" /> 我的评价
+          <Icon name="next" :size="17" class="mi-arrow" />
         </router-link>
-        <router-link class="menu-item press" to="/favorites">
-          <span class="mi-ic">⭐</span>我的收藏<span class="mi-arrow">›</span>
+        <router-link class="menu-item" to="/favorites">
+          <Icon name="heart" :size="20" class="mi-ic" /> 我的收藏
+          <Icon name="next" :size="17" class="mi-arrow" />
         </router-link>
-        <router-link class="menu-item press" to="/my-contributions">
-          <span class="mi-ic">📮</span>我的投稿与纠错<span class="mi-arrow">›</span>
+        <router-link class="menu-item" to="/my-contributions">
+          <Icon name="inbox" :size="20" class="mi-ic" /> 我的投稿与纠错
+          <Icon name="next" :size="17" class="mi-arrow" />
         </router-link>
-        <router-link
-          v-if="user.role === 'admin'"
-          class="menu-item press admin-item"
-          to="/admin"
-        >
-          <span class="mi-ic">🛡️</span>管理审核后台<span class="mi-arrow">›</span>
+        <router-link v-if="user.role === 'admin'" class="menu-item admin" to="/admin">
+          <Icon name="shield" :size="20" class="mi-ic" /> 管理审核后台
+          <Icon name="next" :size="17" class="mi-arrow" />
         </router-link>
       </div>
 
-      <button class="btn btn-ghost btn-block logout" @click="logout">退出登录</button>
+      <button class="btn btn-outline btn-block logout" @click="logout">退出登录</button>
     </template>
 
-    <div v-else style="padding: 24px">
-      <button class="btn btn-primary btn-block" @click="$router.push('/login')">
-        去登录
-      </button>
+    <div v-else class="pf-guest">
+      <button class="btn btn-acid btn-block" @click="$router.push('/login')">去登录</button>
       <button class="btn btn-outline btn-block mt" @click="$router.push('/register')">
         没有账号，去注册
       </button>
@@ -69,8 +73,10 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { api, setToken } from '../api.js';
+import Icon from '../components/Icon.vue';
 
 export default {
+  components: { Icon },
   setup() {
     const router = useRouter();
     const user = ref(null);
@@ -108,63 +114,117 @@ export default {
 
 <style scoped>
 .pf-hero {
-  background: linear-gradient(160deg, #2b2118, #43342a);
-  color: #fff;
+  position: relative;
   text-align: center;
-  padding: 34px 20px 30px;
-  border-radius: 0 0 30px 30px;
+  padding: 36px 20px 30px;
+  border-bottom: 2.5px solid var(--ink);
+  overflow: hidden;
 }
 .pf-avatar {
-  width: 82px;
-  height: 82px;
-  margin: 0 auto 14px;
-  border-radius: 26px;
-  background: linear-gradient(135deg, #ff6a45, var(--primary-deep));
+  width: 84px;
+  height: 84px;
+  margin: 0 auto 16px;
+  border-radius: 6px;
+  background: var(--acid);
+  border: 2px solid #000;
+  box-shadow: 5px 5px 0 #000;
+  color: #000;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 42px;
-  box-shadow: var(--shadow-primary);
 }
-.pf-name { font-size: 22px; font-weight: 900; margin: 0; color: #fff; }
+.pf-name {
+  font-size: 23px;
+}
 .pf-badge {
-  font-size: 10.5px;
-  background: var(--yellow);
-  color: #4a2e00;
-  border-radius: 4px;
-  padding: 1px 8px;
+  font-size: 10px;
+  background: var(--hot);
+  color: #fff;
+  border: 1.5px solid #000;
+  border-radius: 2px;
+  padding: 2px 8px;
   margin-left: 7px;
   vertical-align: middle;
 }
-.pf-user { font-size: 12.5px; color: rgba(255, 255, 255, 0.6); margin: 7px 0 0; }
+.pf-user {
+  font-size: 12.5px;
+  color: var(--ink-2);
+  margin-top: 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.pf-bolt {
+  color: var(--acid);
+}
+.pf-deco {
+  position: absolute;
+  right: 34px;
+  top: 40px;
+  color: var(--cyan);
+}
 
 .stats {
   display: flex;
   align-items: center;
-  margin: -22px 16px 0;
+  margin: -20px 16px 0;
   position: relative;
-  padding: 17px 8px;
+  padding: 16px 6px;
 }
-.stat { flex: 1; text-align: center; }
-.stat b { display: block; font-size: 22px; font-weight: 900; color: var(--primary-deep); }
-.stat span { font-size: 11.5px; color: var(--ink-2); }
-.stat-sep { width: 1px; height: 32px; background: var(--line); }
+.stat {
+  flex: 1;
+  text-align: center;
+}
+.stat b {
+  display: block;
+  font-family: var(--font-en);
+  font-size: 23px;
+  color: var(--acid);
+}
+.stat span {
+  font-size: 11px;
+  color: var(--ink-2);
+}
+.stat-sep {
+  width: 2px;
+  height: 32px;
+  background: var(--line);
+}
 
-.menu { margin: 16px; overflow: hidden; }
+.menu {
+  margin: 16px;
+  padding: 2px 15px;
+}
 .menu-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 15px 16px;
+  padding: 15px 0;
   font-size: 14.5px;
   font-weight: 700;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1.5px solid var(--line);
 }
-.menu-item:last-child { border-bottom: none; }
-.mi-ic { font-size: 20px; }
-.mi-arrow { margin-left: auto; color: var(--ink-3); font-size: 22px; font-weight: 300; }
-.admin-item { color: var(--primary-deep); }
+.menu-item:last-child {
+  border-bottom: none;
+}
+.mi-ic {
+  color: var(--acid);
+}
+.menu-item.admin .mi-ic {
+  color: var(--hot);
+}
+.mi-arrow {
+  margin-left: auto;
+  color: var(--ink-3);
+}
 
-.logout { margin: 4px 16px; }
-.mt { margin-top: 11px; }
+.logout {
+  margin: 4px 16px;
+}
+.pf-guest {
+  padding: 26px 16px;
+}
+.mt {
+  margin-top: 11px;
+}
 </style>

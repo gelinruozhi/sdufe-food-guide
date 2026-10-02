@@ -1,50 +1,47 @@
 <template>
   <div class="ranking-page">
     <header class="rk-hero">
-      <button class="back press" @click="$router.back()">‹</button>
-      <h1 class="rk-title display-title">山财美食<br />红黑榜</h1>
-      <p class="rk-sub">按贝叶斯加权评分排序，评价越多越可信</p>
+      <button class="back" @click="$router.back()">
+        <Icon name="back" :size="20" />
+      </button>
+      <h1 class="rk-hero-type">
+        美食<br /><span :class="tab === 'top' ? 'stroke-acid' : 'stroke-hot'">红黑榜</span>
+      </h1>
+      <p class="rk-sub">贝叶斯加权评分 · 评价越多越可信</p>
+      <Icon name="sparkle" :size="20" class="rk-deco floaty" />
     </header>
 
     <div class="rk-tabs">
-      <button
-        class="rk-tab press"
-        :class="{ on: tab === 'top' }"
-        @click="tab = 'top'"
-      >
-        🏆 好评红榜
+      <button class="rk-tab" :class="{ on: tab === 'top' }" @click="tab = 'top'">
+        <Icon name="bolt" :size="17" /> 好评封神榜
       </button>
-      <button
-        class="rk-tab press"
-        :class="{ on: tab === 'bottom' }"
-        @click="tab = 'bottom'"
-      >
-        💣 避雷黑榜
+      <button class="rk-tab" :class="{ on: tab === 'bottom' }" @click="tab = 'bottom'">
+        <Icon name="flag" :size="17" /> 避雷榜
       </button>
     </div>
 
-    <div class="rk-list">
+    <div class="rk-panel panel">
       <div
         v-for="(s, i) in list"
         :key="tab + s.id"
-        class="rk-row press"
-        v-rise="i * 45"
+        class="rk-row"
         @click="$router.push(`/stall/${s.id}`)"
       >
-        <span class="rk-no" :class="{ top3: i < 3, bottom: tab === 'bottom' }">
-          {{ i + 1 }}
+        <span class="rk-no" :class="{ hot3: i < 3, blacklist: tab === 'bottom' }">
+          {{ String(i + 1).padStart(2, '0') }}
         </span>
-        <span class="rk-emoji" :style="{ background: foodMeta(s.category).gradient }">
-          {{ foodMeta(s.category).emoji }}
+        <span class="rk-art">
+          <FoodArt :category="s.category" icon-size="26" spark-size="8" :stroke-width="2.4" />
         </span>
         <div class="rk-info">
           <div class="rk-name">{{ s.name }}</div>
           <div class="rk-desc muted tiny">
-            {{ s.category }} · {{ s.rating_count }} 评价 · ¥{{ s.avg_price }}/人
+            {{ s.category }} · {{ s.rating_count }} 评价 · ¥{{ s.avg_price }}
           </div>
         </div>
-        <div class="rk-score" :class="{ bottom: tab === 'bottom' }">
-          <span class="rs-star">★</span>{{ s.rating_avg }}
+        <div class="rk-score" :class="{ blacklist: tab === 'bottom' }">
+          <Icon name="starFill" :size="13" />
+          {{ s.rating_avg }}
         </div>
       </div>
     </div>
@@ -54,9 +51,11 @@
 <script>
 import { ref, computed, onMounted } from 'vue';
 import { api } from '../api.js';
-import { foodMeta } from '../lib/foodMeta.js';
+import Icon from '../components/Icon.vue';
+import FoodArt from '../components/FoodArt.vue';
 
 export default {
+  components: { Icon, FoodArt },
   setup() {
     const tab = ref('top');
     const top = ref([]);
@@ -72,98 +71,155 @@ export default {
     });
 
     const list = computed(() => (tab.value === 'top' ? top.value : bottom.value));
-    return { tab, list, foodMeta };
+    return { tab, list };
   },
 };
 </script>
 
 <style scoped>
+.ranking-page {
+  padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0) + 20px);
+}
+
+/* Hero */
 .rk-hero {
   position: relative;
-  background: linear-gradient(160deg, #ff6a45, #d8330f);
-  color: #fff;
-  padding: 22px 20px 28px;
-  border-radius: 0 0 30px 30px;
+  padding: 18px 18px 24px;
+  border-bottom: 2.5px solid var(--ink);
+  overflow: hidden;
 }
 .back {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.25);
-  color: #fff;
-  font-size: 24px;
-  line-height: 1;
+  width: 38px;
+  height: 38px;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  background: var(--bg-2);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-bottom: 3px;
+  margin-bottom: 16px;
 }
-.rk-title { font-size: 34px; margin: 14px 0 8px; color: #fff; }
-.rk-sub { font-size: 12px; margin: 0; opacity: 0.8; }
+.back:active {
+  background: var(--hot);
+  color: #fff;
+  border-color: #000;
+}
+.rk-hero-type {
+  font-family: var(--font-en);
+  line-height: 0.95;
+  font-size: clamp(40px, 13vw, 64px);
+}
+.stroke-hot {
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--hot);
+}
+.rk-sub {
+  font-size: 12px;
+  color: var(--ink-2);
+  margin-top: 12px;
+}
+.rk-deco {
+  position: absolute;
+  right: 24px;
+  bottom: 20px;
+  color: var(--cyan);
+}
 
-.rk-tabs { display: flex; gap: 10px; padding: 18px 16px 6px; }
+/* Tabs */
+.rk-tabs {
+  display: flex;
+  gap: 11px;
+  padding: 18px 16px 0;
+}
 .rk-tab {
   flex: 1;
-  background: #fff;
-  border-radius: var(--r-md);
-  box-shadow: var(--shadow-card);
-  padding: 12px;
-  font-size: 14px;
-  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 2px solid var(--line);
+  border-radius: 4px;
+  background: var(--bg-2);
   color: var(--ink-2);
+  padding: 11px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 13.5px;
+  transition: transform 0.1s, box-shadow 0.1s, background 0.12s, color 0.12s;
 }
 .rk-tab.on {
-  background: linear-gradient(135deg, #ff6a45, var(--primary-deep));
+  background: var(--acid);
+  color: #000;
+  border-color: #000;
+  box-shadow: 4px 4px 0 #000;
+  transform: translate(-1px, -1px);
+}
+.rk-tab:nth-child(2).on {
+  background: var(--hot);
   color: #fff;
-  box-shadow: var(--shadow-primary);
 }
 
-.rk-list { padding: 12px 16px 30px; }
+/* 行式列表 */
+.rk-panel {
+  margin: 16px;
+  padding: 2px 14px;
+}
 .rk-row {
   display: flex;
   align-items: center;
-  gap: 11px;
-  background: #fff;
-  border-radius: var(--r-md);
-  box-shadow: var(--shadow-card);
-  padding: 11px 14px;
-  margin-bottom: 9px;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1.5px solid var(--line);
+}
+.rk-row:last-child {
+  border-bottom: none;
 }
 .rk-no {
-  font-family: var(--font-black);
+  font-family: var(--font-en);
   font-size: 19px;
-  width: 30px;
-  text-align: center;
   color: var(--ink-3);
+  width: 34px;
   flex: none;
 }
-.rk-no.top3 { color: var(--primary); font-size: 23px; }
-.rk-no.bottom { color: #7a8aa0; }
-.rk-emoji {
-  width: 46px;
-  height: 46px;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  flex: none;
+.rk-no.hot3 {
+  color: var(--acid);
 }
-.rk-info { flex: 1; min-width: 0; }
+.rk-no.blacklist {
+  color: var(--hot);
+}
+.rk-art {
+  width: 42px;
+  height: 42px;
+  flex: none;
+  border: 2px solid #000;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.rk-info {
+  flex: 1;
+  min-width: 0;
+}
 .rk-name {
-  font-size: 14.5px;
-  font-weight: 800;
+  font-size: 13.5px;
+  font-weight: 700;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.rk-desc { margin-top: 2px; }
-.rk-score {
-  font-family: var(--font-black);
-  font-size: 17px;
-  color: var(--yellow-deep);
-  flex: none;
+.rk-desc {
+  margin-top: 3px;
 }
-.rk-score.bottom { color: #7a8aa0; }
-.rs-star { font-size: 13px; }
+.rk-score {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--acid);
+}
+.rk-score.blacklist {
+  color: var(--hot);
+}
 </style>

@@ -3,41 +3,45 @@
     <!-- ============ 头图 ============ -->
     <div class="hero">
       <img v-if="stall.cover" :src="stall.cover" />
-      <div v-else class="hero-fallback" :style="{ background: meta.gradient }">
-        <span class="hero-emoji float">{{ meta.emoji }}</span>
-        <span class="hero-circle hc1" />
-        <span class="hero-circle hc2" />
-      </div>
-      <button class="back press" @click="$router.back()">‹</button>
-      <div class="hero-mask">
-        <span class="hero-tag">
-          {{ stall.stall_type === 'inside' ? '校内 · ' + (stall.floor?.name || '') : '校外店铺' }}
-        </span>
+      <FoodArt
+        v-else
+        :category="stall.category"
+        icon-size="118"
+        spark-size="34"
+        :stroke-width="1.4"
+      />
+      <button class="back" @click="$router.back()">
+        <Icon name="back" :size="20" />
+      </button>
+      <div class="hero-bar">
+        <span class="hero-tag">{{ stall.stall_type === 'inside' ? '校内 · ' + (stall.floor?.name || '') : '校外店铺' }}</span>
         <h1>{{ stall.name }}</h1>
       </div>
     </div>
 
     <div class="body">
       <!-- 关键信息 -->
-      <div class="quick card">
+      <div class="quick panel">
         <div class="q-item">
-          <b>¥{{ stall.avg_price }}</b><span>人均消费</span>
+          <b>¥{{ stall.avg_price }}</b><span>人均</span>
         </div>
         <div class="q-sep" />
         <div class="q-item q-wide">
           <b class="q-hours">{{ stall.business_hours }}</b><span>营业时间</span>
         </div>
       </div>
+
       <div v-if="stall.address" class="addr">
-        <span>📍 {{ stall.address }}</span>
-        <a v-if="stall.phone" :href="`tel:${stall.phone}`"> · {{ stall.phone }}</a>
+        <Icon name="location" :size="14" />
+        <span>{{ stall.address }}</span>
+        <a v-if="stall.phone" :href="`tel:${stall.phone}`">{{ stall.phone }}</a>
       </div>
 
-      <!-- 评分仪表 -->
-      <div class="rate card">
+      <!-- 评分分布 -->
+      <div class="rate panel">
         <div class="rate-left">
           <div class="big-score">{{ stall.rating_avg }}</div>
-          <StarBar :model-value="Math.round(stall.rating_avg)" readonly :size="15" />
+          <StarBar :model-value="Math.round(stall.rating_avg)" readonly :size="14" />
           <div class="muted tiny">{{ stall.rating_count }} 条评价</div>
         </div>
         <div class="dist">
@@ -53,53 +57,54 @@
 
       <!-- 态度按钮 -->
       <div class="actions">
-        <button class="act press" :class="{ on: myVote === 1 }" @click="doVote(1)">
-          <span class="act-ic">👍</span><span>{{ stall.upvotes }}</span>
+        <button class="act" :class="{ on: myVote === 1 }" @click="doVote(1)">
+          <Icon name="thumbUp" :size="22" :stroke-width="2.1" />
+          <span>{{ stall.upvotes }}</span>
         </button>
-        <button class="act press" :class="{ down: myVote === -1 }" @click="doVote(-1)">
-          <span class="act-ic">👎</span><span>{{ stall.downvotes }}</span>
+        <button class="act" :class="{ down: myVote === -1 }" @click="doVote(-1)">
+          <Icon name="thumbDown" :size="22" :stroke-width="2.1" />
+          <span>{{ stall.downvotes }}</span>
         </button>
-        <button class="act press" :class="{ on: myFav }" @click="doFav">
-          <span class="act-ic">⭐</span><span>{{ myFav ? '已收藏' : '收藏' }}</span>
+        <button class="act" :class="{ on: myFav }" @click="doFav">
+          <Icon name="heart" :size="22" :stroke-width="2.1" />
+          <span>{{ myFav ? '已藏' : '收藏' }}</span>
         </button>
-        <button class="act press" @click="openReport">
-          <span class="act-ic">🚩</span><span>举报</span>
+        <button class="act" @click="openReport">
+          <Icon name="flag" :size="22" :stroke-width="2.1" />
+          <span>举报</span>
         </button>
       </div>
 
       <!-- 介绍 -->
-      <div class="intro card">
+      <div v-if="stall.description" class="intro panel">
         <h3>窗口介绍</h3>
         <p>{{ stall.description }}</p>
       </div>
 
       <!-- 外卖 -->
-      <div v-if="stall.delivery_supported" class="delivery card">
+      <div v-if="stall.delivery_supported" class="delivery panel">
         <div class="dl-info">
           <h3>外卖点单</h3>
           <p class="muted tiny">
             {{ stall.delivery_platform }} · 起送 ¥{{ stall.min_order }} · 配送 ¥{{ stall.delivery_fee }}
           </p>
         </div>
-        <button class="btn btn-primary btn-sm" @click="toast('演示环境未接入真实下单')">去点单</button>
+        <button class="btn btn-volt btn-sm" @click="toast('演示环境未接入真实下单')">去点单</button>
       </div>
 
-      <!-- 评价 -->
-      <div class="section-title">
+      <!-- 评价标题 -->
+      <div class="rv-section-title">
         <h3>全部评价 {{ stall.rating_count }}</h3>
-        <button class="write-entry" @click="openReview">✏️ 写评价</button>
       </div>
 
-      <div
-        v-for="(rv, i) in reviews"
-        :key="rv.id"
-        class="review card"
-        v-rise="i * 50"
-      >
+      <div v-for="rv in reviews" :key="rv.id" class="review panel">
         <div class="rv-head">
-          <div class="rv-avatar">{{ rv.anonymous ? '🕵️' : AVATARS[rv.id % AVATARS.length] }}</div>
+          <div class="rv-avatar" :class="{ anon: rv.anonymous }">
+            <span v-if="rv.anonymous">匿</span>
+            <Icon v-else name="user" :size="20" />
+          </div>
           <div class="rv-id">
-            <div class="rv-name">{{ rv.nickname }}</div>
+            <div class="rv-name">{{ rv.anonymous ? '匿名同学' : rv.nickname }}</div>
             <StarBar :model-value="rv.star" readonly :size="12" />
           </div>
           <span class="muted tiny rv-time">{{ rv.created_at }}</span>
@@ -114,40 +119,45 @@
           />
         </div>
         <button class="helpful" :class="{ on: rv.my_useful }" @click="doHelpful(rv)">
-          👍 有用 {{ rv.helpful_count }}
+          <Icon name="thumbUp" :size="14" />
+          有用 {{ rv.helpful_count }}
         </button>
       </div>
     </div>
 
-    <button class="fab press" @click="openReview">✏️ 写评价</button>
+    <!-- 写评价 FAB -->
+    <button class="fab" @click="openReview">
+      <Icon name="edit" :size="18" /> 写评价
+    </button>
 
     <!-- 写评价 -->
     <Sheet v-model="reviewOpen">
       <h3 class="sheet-h">为「{{ stall.name }}」打分</h3>
       <div class="write-stars">
-        <StarBar v-model="form.star" :size="42" show-text />
+        <StarBar v-model="form.star" :size="38" show-label />
       </div>
       <textarea
         v-model="form.content"
         rows="4"
-        class="write-area"
+        class="field"
         placeholder="说说味道、分量、性价比，给同学参考…"
       />
       <div class="write-images">
         <div v-for="(im, k) in form.images" :key="k" class="wi-thumb">
           <img :src="im" />
-          <button @click="form.images.splice(k, 1)">×</button>
+          <button @click="form.images.splice(k, 1)"><Icon name="close" :size="11" /></button>
         </div>
         <label v-if="form.images.length < 6 && !uploading" class="wi-add">
-          <input type="file" accept="image/*" hidden @change="pickImage" />＋
+          <input type="file" accept="image/*" hidden @change="pickImage" />
+          <Icon name="camera" :size="24" />
         </label>
-        <span v-if="uploading" class="wi-loading spin">⚙️</span>
+        <span v-if="uploading" class="wi-loading"><Icon name="bolt" :size="26" class="spin" /></span>
       </div>
       <label class="anon">
         <input type="checkbox" v-model="form.anonymous" /> 匿名评价
       </label>
       <button
-        class="btn btn-primary btn-block"
+        class="btn btn-acid btn-block"
         :disabled="submitting || !form.star"
         @click="submitReview"
       >
@@ -161,7 +171,7 @@
         <button
           v-for="x in REPORT_REASONS"
           :key="x"
-          class="reason-chip press"
+          class="reason-chip"
           @click="submitReport(x)"
         >
           {{ x }}
@@ -170,11 +180,10 @@
     </Sheet>
 
     <!-- 图片预览 -->
-    <transition name="fade">
-      <div v-if="preview" class="img-preview" @click="preview = ''">
-        <img :src="preview" />
-      </div>
-    </transition>
+    <div v-if="preview" class="img-preview" @click="preview = ''">
+      <img :src="preview" />
+      <button class="preview-x"><Icon name="close" :size="22" /></button>
+    </div>
   </div>
 </template>
 
@@ -182,12 +191,12 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { api, getToken, uploadImage } from '../api.js';
-import { foodMeta } from '../lib/foodMeta.js';
 import { toast } from '../lib/toast.js';
+import Icon from '../components/Icon.vue';
+import FoodArt from '../components/FoodArt.vue';
 import StarBar from '../components/StarBar.vue';
 import Sheet from '../components/Sheet.vue';
 
-const AVATARS = ['🐱', '🐻', '🦊', '🐼', '🐨', '🦁', '🐸', '🐵', '🐷', '🐰'];
 const REPORT_REASONS = ['内容违规', '广告 / 引流', '虚假信息', '不文明用语', '图片不当', '其他'];
 
 function emptyForm() {
@@ -195,14 +204,13 @@ function emptyForm() {
 }
 
 export default {
-  components: { StarBar, Sheet },
+  components: { Icon, FoodArt, StarBar, Sheet },
   setup() {
     const route = useRoute();
     const router = useRouter();
 
     const stall = ref({ distribution: {} });
     const reviews = ref([]);
-    const meta = computed(() => foodMeta(stall.value.category));
 
     const myVote = ref(0);
     const myFav = ref(false);
@@ -225,7 +233,7 @@ export default {
     onMounted(load);
 
     function pct(i) {
-      const total = reviews.value.length || 1;
+      const total = stall.value.rating_count || 1;
       return Math.round(((stall.value.distribution?.[i] || 0) / total) * 100);
     }
 
@@ -319,9 +327,9 @@ export default {
     }
 
     return {
-      stall, reviews, meta, myVote, myFav,
+      stall, reviews, myVote, myFav,
       reviewOpen, reportOpen, form, submitting, uploading, preview,
-      AVATARS, REPORT_REASONS, toast,
+      REPORT_REASONS, toast,
       pct, doVote, doFav, openReview, pickImage, submitReview, doHelpful,
       openReport, submitReport,
     };
@@ -333,7 +341,7 @@ export default {
 /* 头图 */
 .hero {
   position: relative;
-  height: 300px;
+  height: 264px;
   overflow: hidden;
 }
 .hero img {
@@ -341,127 +349,149 @@ export default {
   height: 100%;
   object-fit: cover;
 }
-.hero-fallback {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.hero-emoji {
-  font-size: 110px;
-  filter: drop-shadow(0 14px 26px rgba(0, 0, 0, 0.22));
-}
-.hero-circle {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.14);
-  pointer-events: none;
-}
-.hc1 { width: 180px; height: 180px; top: -70px; right: -50px; }
-.hc2 { width: 110px; height: 110px; bottom: 30px; left: -40px; }
 .back {
   position: absolute;
-  top: 16px;
-  left: 16px;
+  top: 14px;
+  left: 14px;
   width: 38px;
   height: 38px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.28);
-  color: #fff;
-  font-size: 26px;
-  line-height: 1;
+  background: rgba(12, 12, 14, 0.8);
+  border: 2px solid var(--ink);
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-bottom: 4px;
-  z-index: 2;
+  z-index: 3;
 }
-.hero-mask {
+.back:active {
+  background: var(--hot);
+  color: #fff;
+  border-color: #000;
+}
+.hero-bar {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 40px 20px 18px;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.55));
-  color: #fff;
-}
-.hero-mask h1 {
-  margin: 6px 0 0;
-  font-size: 27px;
-  font-weight: 900;
+  padding: 12px 16px 13px;
+  background: rgba(8, 8, 10, 0.78);
+  border-top: 2px solid var(--acid);
 }
 .hero-tag {
-  font-size: 11.5px;
-  background: rgba(255, 255, 255, 0.22);
-  border-radius: 999px;
-  padding: 3px 12px;
+  font-size: 10.5px;
+  color: var(--acid);
+  font-weight: 700;
+}
+.hero-bar h1 {
+  margin-top: 3px;
+  font-size: 23px;
 }
 
-.body { padding: 16px 16px 90px; }
+.body {
+  padding: 16px 16px 96px;
+}
 
 /* 关键信息 */
 .quick {
   display: flex;
   align-items: center;
-  margin-top: -22px;
+  margin-top: -24px;
   position: relative;
-  padding: 16px;
+  padding: 15px;
 }
-.q-item { flex: 1; text-align: center; }
-.q-item b { display: block; font-size: 19px; font-weight: 900; color: var(--primary-deep); }
-.q-hours { font-size: 14px !important; color: var(--ink) !important; }
-.q-item span { font-size: 11px; color: var(--ink-2); }
-.q-sep { width: 1px; height: 34px; background: var(--line); }
-.q-wide { flex: 1.6; }
-.addr {
-  font-size: 12.5px;
+.q-item {
+  flex: 1;
+  text-align: center;
+}
+.q-item b {
+  display: block;
+  font-family: var(--font-en);
+  font-size: 19px;
+  color: var(--acid);
+}
+.q-hours {
+  font-size: 13px !important;
+  color: var(--ink) !important;
+  font-family: var(--font-display) !important;
+}
+.q-item span {
+  font-size: 10.5px;
   color: var(--ink-2);
-  margin: 10px 4px 0;
 }
-.addr a { color: var(--blue); }
+.q-sep {
+  width: 2px;
+  height: 34px;
+  background: var(--line);
+}
+.q-wide {
+  flex: 1.7;
+}
+.addr {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink-2);
+  margin: 11px 4px 0;
+  flex-wrap: wrap;
+}
+.addr a {
+  color: var(--cyan);
+}
 
-/* 评分 */
+/* 评分分布 */
 .rate {
   display: flex;
   align-items: center;
-  padding: 16px;
+  padding: 15px;
   margin-top: 14px;
-  gap: 16px;
+  gap: 15px;
 }
 .rate-left {
   text-align: center;
   flex: none;
 }
 .big-score {
-  font-family: var(--font-black);
-  font-size: 38px;
+  font-family: var(--font-en);
+  font-size: 36px;
   line-height: 1;
-  color: var(--ink);
 }
-.dist { flex: 1; }
+.rate-left :deep(.starbar) {
+  margin: 6px 0 4px;
+}
+.dist {
+  flex: 1;
+}
 .dist-row {
   display: flex;
   align-items: center;
   gap: 7px;
   margin-bottom: 4px;
 }
-.dist-n { font-size: 11px; color: var(--ink-2); width: 9px; }
+.dist-n {
+  font-size: 10.5px;
+  color: var(--ink-2);
+  width: 8px;
+}
 .dist-track {
   flex: 1;
-  height: 6px;
-  border-radius: 3px;
-  background: #f3ece4;
+  height: 8px;
+  background: var(--bg);
+  border: 1.5px solid var(--line);
   overflow: hidden;
 }
 .dist-fill {
   height: 100%;
-  border-radius: 3px;
-  background: linear-gradient(90deg, #ffd45e, var(--yellow-deep));
+  background: var(--acid);
 }
-.dist-c { font-size: 11px; color: var(--ink-2); width: 16px; text-align: right; }
+.dist-c {
+  font-size: 10.5px;
+  color: var(--ink-2);
+  width: 15px;
+  text-align: right;
+}
 
-/* 态度 */
+/* 态度按钮 */
 .actions {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -469,155 +499,234 @@ export default {
   margin-top: 14px;
 }
 .act {
-  background: #fff;
-  border-radius: var(--r-sm);
-  box-shadow: var(--shadow-card);
-  padding: 11px 4px;
+  background: var(--bg-2);
+  border: 2px solid var(--line);
+  border-radius: 4px;
+  padding: 11px 4px 9px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  font-size: 11.5px;
+  gap: 5px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--ink-2);
+  transition: transform 0.1s, background 0.12s, color 0.12s, border-color 0.12s;
 }
-.act-ic { font-size: 20px; }
 .act.on {
-  background: var(--primary-soft);
-  color: var(--primary-deep);
-  animation: heartbeat 0.5s;
+  background: var(--acid);
+  color: #000;
+  border-color: #000;
+  animation: pop 0.35s cubic-bezier(0.2, 1.2, 0.4, 1);
 }
-.act.down { background: #f2f3f5; }
+.act.down {
+  background: var(--hot);
+  color: #fff;
+  border-color: #000;
+}
 
 /* 介绍 / 外卖 */
 .intro,
-.delivery { padding: 16px 18px; margin-top: 14px; }
+.delivery {
+  padding: 15px 17px;
+  margin-top: 14px;
+}
 .intro h3,
-.delivery h3 { margin: 0 0 7px; font-size: 15px; }
-.intro p { margin: 0; font-size: 13.5px; line-height: 1.8; color: #4a3f36; }
+.delivery h3 {
+  font-size: 14.5px;
+  margin-bottom: 7px;
+}
+.intro p {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--ink-2);
+}
 .delivery {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
 }
-.delivery p { margin: 0; }
-
-.write-entry {
-  color: var(--primary);
-  font-size: 12.5px;
-  font-weight: 800;
+.delivery p {
+  margin-top: 3px;
 }
 
 /* 评价 */
-.review { padding: 14px 16px; margin-bottom: 11px; }
-.rv-head { display: flex; align-items: center; gap: 10px; }
+.rv-section-title {
+  margin: 24px 2px 12px;
+}
+.rv-section-title h3 {
+  font-size: 17px;
+}
+.review {
+  padding: 14px 15px;
+  margin-bottom: 12px;
+}
+.rv-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 .rv-avatar {
   width: 40px;
   height: 40px;
-  border-radius: 50%;
-  background: var(--bg-2);
+  flex: none;
+  border-radius: 4px;
+  background: var(--volt);
+  border: 2px solid var(--ink);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 21px;
+  font-weight: 800;
+}
+.rv-avatar.anon {
+  background: var(--bg-2);
+  border-color: var(--line);
+  color: var(--ink-2);
+}
+.rv-id {
+  flex: 1;
+  min-width: 0;
+}
+.rv-name {
+  font-size: 13.5px;
+  font-weight: 700;
+}
+.rv-id :deep(.starbar) {
+  margin-top: 3px;
+}
+.rv-time {
   flex: none;
 }
-.rv-id { flex: 1; }
-.rv-name { font-size: 13.5px; font-weight: 800; }
-.rv-time { flex: none; }
-.rv-content { font-size: 13.5px; line-height: 1.75; margin: 9px 0; }
+.rv-content {
+  font-size: 13px;
+  line-height: 1.75;
+  margin: 10px 0;
+}
 .rv-images {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 6px;
-  margin-bottom: 9px;
+  margin-bottom: 10px;
 }
 .rv-images img {
   width: 100%;
   aspect-ratio: 1;
   object-fit: cover;
-  border-radius: 9px;
+  border: 1.5px solid var(--line);
+  border-radius: 3px;
 }
 .helpful {
-  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
   color: var(--ink-2);
   background: var(--bg);
-  border-radius: 999px;
-  padding: 5px 13px;
+  border: 1.5px solid var(--line);
+  border-radius: 3px;
+  padding: 5px 12px;
 }
-.helpful.on { color: var(--primary); background: var(--primary-soft); }
+.helpful.on {
+  color: var(--acid);
+  border-color: var(--acid);
+}
 
+/* FAB */
 .fab {
   position: fixed;
-  right: 18px;
-  bottom: 22px;
+  right: 16px;
+  bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0) + 16px);
   z-index: 90;
-  background: linear-gradient(135deg, #ff6a45, var(--primary-deep));
-  color: #fff;
-  border-radius: 999px;
-  padding: 13px 21px;
+  background: var(--acid);
+  color: #000;
+  border: 2px solid #000;
+  border-radius: 4px;
+  box-shadow: 4px 4px 0 #000;
+  padding: 12px 18px;
+  font-family: var(--font-display);
   font-weight: 800;
-  box-shadow: var(--shadow-primary);
+  font-size: 13.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.fab:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 #000;
 }
 
 /* 写评价表单 */
-.sheet-h { text-align: center; font-size: 17px; margin: 4px 0 14px; }
-.write-stars { text-align: center; margin-bottom: 14px; }
-.write-area {
-  width: 100%;
-  background: #fff;
-  border-radius: var(--r-sm);
-  padding: 13px 15px;
-  box-shadow: var(--shadow-card);
-  line-height: 1.7;
+.sheet-h {
+  text-align: center;
+  font-size: 16px;
+  margin-bottom: 15px;
 }
-.write-images { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+.write-stars {
+  text-align: center;
+  margin-bottom: 15px;
+}
+.write-images {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 13px 0;
+}
 .wi-thumb {
   position: relative;
-  width: 64px;
-  height: 64px;
+  width: 62px;
+  height: 62px;
 }
 .wi-thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 11px;
+  border: 2px solid var(--line);
+  border-radius: 3px;
 }
 .wi-thumb button {
   position: absolute;
-  top: -7px;
-  right: -7px;
-  width: 21px;
-  height: 21px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.6);
+  top: -8px;
+  right: -8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 3px;
+  background: var(--hot);
   color: #fff;
-  font-size: 13px;
-  line-height: 1;
+  border: 1.5px solid #000;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .wi-add {
-  width: 64px;
-  height: 64px;
-  border-radius: 11px;
-  background: #fff;
-  box-shadow: var(--shadow-card);
+  width: 62px;
+  height: 62px;
+  border: 2px dashed var(--line);
+  border-radius: 3px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
-  color: var(--ink-3);
+  color: var(--ink-2);
 }
-.wi-loading { font-size: 28px; }
+.wi-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 62px;
+  height: 62px;
+  color: var(--acid);
+}
 .anon {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   font-size: 13px;
   color: var(--ink-2);
-  margin-bottom: 14px;
+  margin-bottom: 15px;
+}
+.anon input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--acid);
 }
 
 /* 举报 */
@@ -625,27 +734,51 @@ export default {
   display: flex;
   flex-wrap: wrap;
   gap: 9px;
-  justify-content: center;
 }
 .reason-chip {
-  background: #fff;
-  border-radius: 999px;
-  padding: 10px 18px;
+  background: var(--bg);
+  border: 2px solid var(--line);
+  border-radius: 4px;
+  padding: 10px 16px;
   font-size: 13px;
   font-weight: 700;
-  box-shadow: var(--shadow-card);
+  color: var(--ink);
+}
+.reason-chip:active {
+  background: var(--acid);
+  color: #000;
+  border-color: #000;
 }
 
 /* 图片预览 */
 .img-preview {
   position: fixed;
   inset: 0;
-  z-index: 500;
-  background: rgba(0, 0, 0, 0.92);
+  z-index: 700;
+  background: rgba(0, 0, 0, 0.94);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
 }
-.img-preview img { max-width: 100%; max-height: 100%; border-radius: 6px; }
+.img-preview img {
+  max-width: 100%;
+  max-height: 100%;
+  border: 2px solid var(--line);
+  border-radius: 4px;
+}
+.preview-x {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 </style>

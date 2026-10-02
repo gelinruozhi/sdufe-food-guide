@@ -1,31 +1,27 @@
 <template>
   <div class="search-page">
-    <header class="search-bar">
-      <div class="sb-input">
-        <span class="sb-ic">🔍</span>
+    <header class="s-head">
+      <div class="s-input">
+        <Icon name="search" :size="18" class="s-ic" />
         <input
           ref="inputEl"
           v-model="kw"
-          placeholder="搜索窗口 / 菜品，如 黄焖鸡"
+          placeholder="搜窗口 / 菜品，如 黄焖鸡"
           @input="onInput"
           @keyup.enter="commit"
         />
-        <button v-if="kw" class="sb-clear" @click="clear">×</button>
+        <button v-if="kw" class="s-clear" @click="clear">
+          <Icon name="close" :size="13" />
+        </button>
       </div>
-      <button class="sb-cancel" @click="$router.back()">取消</button>
     </header>
 
     <!-- 未搜索：热门 + 历史 -->
     <div v-if="!kw" class="s-body">
       <div class="block">
-        <h3 class="block-title">热门搜索 🔥</h3>
+        <h3 class="blk-title">热门搜索</h3>
         <div class="tags">
-          <button
-            v-for="h in HOT"
-            :key="h"
-            class="tag press"
-            @click="useTag(h)"
-          >
+          <button v-for="h in HOT" :key="h" class="tag" @click="useTag(h)">
             {{ h }}
           </button>
         </div>
@@ -33,17 +29,12 @@
 
       <div v-if="hist.length" class="block">
         <div class="hist-head">
-          <h3 class="block-title">搜索历史</h3>
+          <h3 class="blk-title">搜索历史</h3>
           <button class="clear-hist" @click="clearHist">清空</button>
         </div>
         <div class="hist-list">
-          <button
-            v-for="h in hist"
-            :key="h"
-            class="hist-item"
-            @click="useTag(h)"
-          >
-            <span>🕐</span>{{ h }}
+          <button v-for="h in hist" :key="h" class="hist-item" @click="useTag(h)">
+            <Icon name="clock" :size="16" /> <span>{{ h }}</span>
           </button>
         </div>
       </div>
@@ -55,7 +46,7 @@
         <button
           v-for="t in TYPES"
           :key="t.v"
-          class="tf press"
+          class="tf"
           :class="{ on: type === t.v }"
           @click="type = t.v; doSearch()"
         >
@@ -65,8 +56,12 @@
       <p class="result-count muted tiny" v-if="results.length">
         找到 {{ results.length }} 个相关窗口
       </p>
-      <FoodCard v-for="s in results" :key="s.id" :stall="s" />
-      <Empty v-if="searched && !results.length" emoji="🔍" title="没有找到相关窗口，换个词试试" />
+      <FoodCard v-for="(s, i) in results" :key="s.id" :stall="s" :index="i" />
+      <Empty
+        v-if="searched && !results.length"
+        icon="search"
+        text="没有找到相关窗口，换个词试试"
+      />
     </div>
   </div>
 </template>
@@ -74,6 +69,7 @@
 <script>
 import { ref, onMounted } from 'vue';
 import { api } from '../api.js';
+import Icon from '../components/Icon.vue';
 import FoodCard from '../components/FoodCard.vue';
 import Empty from '../components/Empty.vue';
 
@@ -86,7 +82,7 @@ const TYPES = [
 const HIST_KEY = 'sdufe_search_hist';
 
 export default {
-  components: { FoodCard, Empty },
+  components: { Icon, FoodCard, Empty },
   setup() {
     const kw = ref('');
     const type = ref('');
@@ -106,10 +102,7 @@ export default {
         results.value = [];
         return;
       }
-      const q = new URLSearchParams({
-        keyword: kw.value.trim(),
-        pageSize: '50',
-      });
+      const q = new URLSearchParams({ keyword: kw.value.trim(), pageSize: '50' });
       if (type.value) q.set('type', type.value);
       const r = await api(`/api/stalls?${q}`);
       results.value = r.stalls;
@@ -148,75 +141,123 @@ export default {
 </script>
 
 <style scoped>
-.search-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.s-head {
   padding: 14px 16px;
-  background: var(--bg);
   position: sticky;
   top: 0;
   z-index: 20;
+  background: rgba(12, 12, 14, 0.9);
+  border-bottom: 2px solid var(--line);
 }
-.sb-input {
-  flex: 1;
+.s-input {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: #fff;
-  border-radius: 999px;
-  padding: 9px 15px;
-  box-shadow: var(--shadow-card);
+  gap: 9px;
+  background: var(--bg-2);
+  border: 2px solid var(--line);
+  border-radius: 4px;
+  padding: 10px 13px;
+  transition: border-color 0.12s, box-shadow 0.12s;
 }
-.sb-ic { font-size: 13px; }
-.sb-input input { flex: 1; font-size: 14px; }
-.sb-clear {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #ddd;
-  color: #fff;
+.s-input:focus-within {
+  border-color: var(--acid);
+  box-shadow: 3px 3px 0 rgba(204, 255, 0, 0.3);
+}
+.s-ic {
+  color: var(--ink-2);
+  flex: none;
+}
+.s-input input {
+  flex: 1;
   font-size: 14px;
-  line-height: 1;
+  min-width: 0;
+}
+.s-clear {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 3px;
+  background: var(--hot);
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.sb-cancel { font-size: 14px; color: var(--primary); font-weight: 700; }
 
-.s-body { padding: 6px 16px 30px; }
-.block { margin-bottom: 22px; }
-.block-title { font-size: 15px; font-weight: 900; margin: 10px 2px 12px; }
-.tags { display: flex; flex-wrap: wrap; gap: 9px; }
+.s-body {
+  padding: 18px 16px 30px;
+}
+.block {
+  margin-bottom: 26px;
+}
+.blk-title {
+  font-size: 16px;
+  margin: 4px 2px 13px;
+}
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
 .tag {
-  background: #fff;
-  border-radius: 999px;
-  padding: 8px 16px;
+  background: var(--bg-2);
+  border: 2px solid var(--line);
+  border-radius: 4px;
+  padding: 8px 15px;
   font-size: 13px;
   font-weight: 700;
-  box-shadow: var(--shadow-card);
+  color: var(--ink);
+  transition: transform 0.08s, background 0.1s, color 0.1s, border-color 0.1s;
 }
-.hist-head { display: flex; justify-content: space-between; align-items: center; }
-.clear-hist { font-size: 12px; color: var(--ink-3); }
-.hist-list { display: flex; flex-direction: column; }
+.tag:active {
+  background: var(--acid);
+  color: #000;
+  border-color: #000;
+  transform: translate(2px, 2px);
+}
+.hist-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.clear-hist {
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+.hist-list {
+  display: flex;
+  flex-direction: column;
+}
 .hist-item {
   display: flex;
+  align-items: center;
   gap: 10px;
-  padding: 11px 2px;
+  padding: 12px 2px;
   font-size: 14px;
   color: var(--ink-2);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1.5px solid var(--line);
 }
-.type-filter { display: flex; gap: 8px; margin: 4px 0 14px; }
+.type-filter {
+  display: flex;
+  gap: 9px;
+  margin-bottom: 15px;
+}
 .tf {
-  border-radius: 999px;
-  padding: 7px 18px;
+  flex: 1;
+  border: 2px solid var(--line);
+  border-radius: 4px;
+  padding: 9px;
   font-size: 13px;
   font-weight: 700;
-  background: #fff;
+  background: var(--bg-2);
   color: var(--ink-2);
-  box-shadow: var(--shadow-card);
 }
-.tf.on { background: var(--primary); color: #fff; }
-.result-count { margin: 0 2px 12px; }
+.tf.on {
+  background: var(--acid);
+  color: #000;
+  border-color: #000;
+}
+.result-count {
+  margin: 0 2px 13px;
+}
 </style>

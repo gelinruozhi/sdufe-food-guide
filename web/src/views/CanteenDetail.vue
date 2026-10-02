@@ -1,35 +1,48 @@
 <template>
-  <div class="canteen-page">
+  <div class="cd-page">
     <!-- Hero -->
-    <header class="ch" :style="{ background: style.gradient }">
-      <button class="back press" @click="$router.back()">‹</button>
-      <span class="ch-emoji float">{{ style.emoji }}</span>
-      <h1 class="ch-name">{{ canteen.name }}</h1>
-      <p class="ch-loc">{{ canteen.location }}</p>
-      <p class="ch-hours">营业时间 {{ canteen.open_hours }}</p>
+    <header class="cd-hero">
+      <button class="cd-back" @click="$router.back()">
+        <Icon name="back" :size="20" />
+      </button>
+      <span class="cd-bgno">{{ '0' + canteen.id }}</span>
+
+      <span class="cd-kicker" :style="{ color: accent, borderColor: accent }">
+        CANTEEN / 校内餐厅
+      </span>
+      <h1 class="cd-name">
+        {{ canteen.name }}
+      </h1>
+
+      <div class="cd-meta">
+        <span><Icon name="location" :size="15" /> {{ canteen.location }}</span>
+        <span><Icon name="clock" :size="15" /> 营业 {{ canteen.open_hours }}</span>
+      </div>
+
+      <Icon name="sparkle" :size="22" class="cd-deco floaty" :style="{ color: accent }" />
     </header>
 
-    <!-- 楼层选择 -->
-    <div class="floor-tabs">
+    <!-- 楼层切换 -->
+    <div class="floor-switch">
       <button
         v-for="(f, i) in floors"
         :key="f.id"
-        class="floor-tab press"
+        class="fs-btn"
         :class="{ on: active === i }"
         @click="active = i"
       >
-        <span class="ft-no">{{ f.name }}</span>
-        <span class="ft-count">{{ f.stalls.length }} 个窗口</span>
+        <b>{{ f.name }}</b>
+        <span>{{ f.stalls.length }} 窗口</span>
       </button>
     </div>
 
     <!-- 窗口流 -->
-    <div class="stall-list">
+    <div class="cd-list">
       <FoodCard
         v-for="(s, i) in currentStalls"
         :key="s.id"
         :stall="s"
-        v-rise="i * 50"
+        :index="i"
       />
     </div>
   </div>
@@ -39,23 +52,20 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { api } from '../api.js';
+import Icon from '../components/Icon.vue';
 import FoodCard from '../components/FoodCard.vue';
 
-const STYLES = [
-  { emoji: '🏛️', gradient: 'linear-gradient(160deg,#ff8a5c,#e8420f)' },
-  { emoji: '🏫', gradient: 'linear-gradient(160deg,#6fb4f0,#3f86d6)' },
-  { emoji: '🏢', gradient: 'linear-gradient(160deg,#5bd6a3,#1a9e63)' },
-];
+const ACCENTS = ['#ccff00', '#ff2e93', '#8061ff'];
 
 export default {
-  components: { FoodCard },
+  components: { Icon, FoodCard },
   setup() {
     const route = useRoute();
-    const canteen = ref({});
+    const canteen = ref({ id: route.params.id });
     const floors = ref([]);
     const active = ref(0);
 
-    const style = computed(() => STYLES[Number(route.params.id) - 1] || STYLES[0]);
+    const accent = computed(() => ACCENTS[Number(route.params.id) - 1] || ACCENTS[0]);
     const currentStalls = computed(() => floors.value[active.value]?.stalls || []);
 
     onMounted(async () => {
@@ -64,70 +74,122 @@ export default {
       floors.value = r.floors;
     });
 
-    return { canteen, floors, active, style, currentStalls };
+    return { canteen, floors, active, accent, currentStalls };
   },
 };
 </script>
 
 <style scoped>
-.ch {
-  position: relative;
-  padding: 20px 20px 26px;
-  border-radius: 0 0 30px 30px;
-  overflow: hidden;
-  color: #fff;
+.cd-page {
+  padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0) + 20px);
 }
-.back {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.25);
-  color: #fff;
-  font-size: 24px;
-  line-height: 1;
+
+/* Hero */
+.cd-hero {
+  position: relative;
+  padding: 18px 18px 24px;
+  border-bottom: 2.5px solid var(--ink);
+  overflow: hidden;
+}
+.cd-back {
+  width: 38px;
+  height: 38px;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-bottom: 3px;
+  background: var(--bg-2);
+  margin-bottom: 18px;
 }
-.ch-emoji {
+.cd-back:active {
+  background: var(--hot);
+  color: #fff;
+  border-color: #000;
+}
+.cd-bgno {
   position: absolute;
-  right: 24px;
-  top: 26px;
-  font-size: 60px;
-  opacity: 0.9;
-  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.2));
+  right: 8px;
+  top: 8px;
+  font-family: var(--font-en);
+  font-size: 120px;
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.12);
+  pointer-events: none;
 }
-.ch-name { font-size: 26px; font-weight: 900; margin: 16px 0 4px; }
-.ch-loc { font-size: 13px; margin: 0; opacity: 0.9; }
-.ch-hours { font-size: 12px; margin: 6px 0 0; opacity: 0.75; }
-
-.floor-tabs {
+.cd-kicker {
+  display: inline-block;
+  font-family: var(--font-en);
+  font-size: 10.5px;
+  border: 1.5px solid;
+  border-radius: 2px;
+  padding: 3px 9px;
+  margin-bottom: 12px;
+}
+.cd-name {
+  font-size: 34px;
+  position: relative;
+}
+.cd-meta {
+  position: relative;
+  margin-top: 14px;
   display: flex;
-  gap: 10px;
-  padding: 18px 16px 4px;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--ink-2);
 }
-.floor-tab {
+.cd-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.cd-deco {
+  position: absolute;
+  left: 150px;
+  bottom: 14px;
+}
+
+/* 楼层切换 */
+.floor-switch {
+  display: flex;
+  gap: 11px;
+  padding: 18px 16px 2px;
+}
+.fs-btn {
   flex: 1;
-  background: #fff;
-  border-radius: var(--r-md);
-  box-shadow: var(--shadow-card);
+  border: 2px solid var(--line);
+  border-radius: 4px;
+  background: var(--bg-2);
   padding: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
-  transition: all 0.2s;
+  gap: 4px;
+  transition: transform 0.1s, box-shadow 0.1s, background 0.12s, color 0.12s;
 }
-.floor-tab.on {
-  background: linear-gradient(135deg, #ff6a45, var(--primary-deep));
-  box-shadow: var(--shadow-primary);
-  transform: translateY(-2px);
+.fs-btn b {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
 }
-.ft-no { font-weight: 900; font-size: 15px; }
-.ft-count { font-size: 11px; color: var(--ink-2); }
-.floor-tab.on .ft-count { color: rgba(255, 255, 255, 0.8); }
+.fs-btn span {
+  font-size: 10.5px;
+  color: var(--ink-2);
+}
+.fs-btn.on {
+  background: var(--acid);
+  color: #000;
+  border-color: #000;
+  box-shadow: 4px 4px 0 #000;
+  transform: translate(-1px, -1px);
+}
+.fs-btn.on span {
+  color: rgba(0, 0, 0, 0.7);
+}
 
-.stall-list { padding: 12px 16px 30px; }
-.list-enter-active { transition: none; }
+.cd-list {
+  padding: 16px 16px 0;
+}
 </style>

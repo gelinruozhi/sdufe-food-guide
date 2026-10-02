@@ -1,23 +1,30 @@
 <template>
-  <router-link class="fc press card" :to="`/stall/${stall.id}`">
-    <div class="fc-cover" :style="!stall.cover ? { background: meta.gradient } : null">
+  <router-link
+    class="fc"
+    :to="`/stall/${stall.id}`"
+    :style="{ boxShadow: `4px 4px 0 ${SHADOWS[index % SHADOWS.length]}` }"
+  >
+    <div class="fc-art">
       <img v-if="stall.cover" :src="stall.cover" :alt="stall.name" />
-      <span v-else class="fc-emoji float">{{ meta.emoji }}</span>
-      <span v-if="stall.stall_type === 'outside'" class="fc-sticker">校外</span>
-      <span v-else class="fc-sticker fc-sticker-in">校内</span>
+      <FoodArt v-else :category="stall.category" icon-size="44" spark-size="13" />
     </div>
     <div class="fc-body">
-      <div class="fc-name">{{ stall.name }}</div>
+      <div class="fc-top">
+        <span class="fc-name">{{ stall.name }}</span>
+        <span class="fc-badge" :class="stall.stall_type">
+          {{ stall.stall_type === 'outside' ? '校外' : '校内' }}
+        </span>
+      </div>
       <div class="fc-rate">
         <template v-if="stall.rating_count">
-          <span class="fc-star">★</span>
+          <Icon name="starFill" :size="13" class="fc-star" />
           <b>{{ stall.rating_avg }}</b>
-          <span class="muted tiny">{{ stall.rating_count }} 条评价</span>
+          <span class="muted tiny">{{ stall.rating_count }} 条</span>
         </template>
-        <span v-else class="muted tiny">暂无评分，等你来评</span>
+        <span v-else class="muted tiny">暂无评分</span>
       </div>
       <div class="fc-foot">
-        <span class="chip">{{ stall.category }}</span>
+        <span class="fc-cat">{{ stall.category }}</span>
         <span class="fc-price">¥{{ stall.avg_price }}<i>/人</i></span>
       </div>
     </div>
@@ -25,76 +32,81 @@
 </template>
 
 <script>
-import { computed } from 'vue';
-import { foodMeta } from '../lib/foodMeta.js';
+import Icon from './Icon.vue';
+import FoodArt from './FoodArt.vue';
+
+const SHADOWS = ['#ccff00', '#ff2e93', '#8061ff', '#19e0ff'];
 
 export default {
-  props: { stall: { type: Object, required: true } },
-  setup(props) {
-    const meta = computed(() => foodMeta(props.stall.category));
-    return { meta };
+  name: 'FoodCard',
+  components: { Icon, FoodArt },
+  props: {
+    stall: { type: Object, required: true },
+    index: { type: Number, default: 0 },
   },
+  data: () => ({ SHADOWS }),
 };
 </script>
 
 <style scoped>
 .fc {
   display: flex;
-  align-items: stretch;
   overflow: hidden;
-  margin-bottom: 12px;
-  border-radius: var(--r-md);
+  margin-bottom: 13px;
+  border-radius: 4px;
+  background: var(--surface);
+  border: 2px solid var(--ink);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
-.fc-cover {
+.fc:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 var(--black) !important;
+}
+.fc-art {
   position: relative;
-  width: 108px;
+  width: 100px;
   flex: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
 }
-.fc-cover img {
+.fc-art img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.fc-emoji {
-  font-size: 46px;
-  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.15));
-}
-.fc-sticker {
-  position: absolute;
-  top: 8px;
-  left: -6px;
-  background: var(--yellow);
-  color: #5a3a00;
-  font-size: 10px;
-  font-weight: 900;
-  padding: 2px 9px 2px 7px;
-  border-radius: 0 6px 6px 0;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-  transform: rotate(-4deg);
-}
-.fc-sticker-in {
-  background: #fff;
-  color: var(--primary-deep);
-}
 .fc-body {
   flex: 1;
   min-width: 0;
-  padding: 11px 13px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 }
+.fc-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 7px;
+}
 .fc-name {
-  font-size: 15.5px;
-  font-weight: 900;
-  line-height: 1.3;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-family: var(--font-display);
+  font-size: 14.5px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+.fc-badge {
+  flex: none;
+  font-size: 9.5px;
+  font-weight: 800;
+  border-radius: 2px;
+  padding: 2px 6px;
+  border: 1.5px solid var(--black);
+}
+.fc-badge.inside {
+  background: var(--acid);
+  color: var(--black);
+}
+.fc-badge.outside {
+  background: var(--hot);
+  color: #fff;
 }
 .fc-rate {
   display: flex;
@@ -102,26 +114,34 @@ export default {
   gap: 5px;
 }
 .fc-star {
-  color: var(--yellow-deep);
-  font-size: 14px;
+  color: var(--acid);
 }
 .fc-rate b {
-  font-size: 14px;
+  font-size: 13.5px;
+  font-family: var(--font-display);
 }
 .fc-foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
+.fc-cat {
+  font-size: 10.5px;
+  color: var(--ink-2);
+  border: 1.5px solid var(--line);
+  border-radius: 2px;
+  padding: 1px 7px;
+}
 .fc-price {
-  color: var(--primary-deep);
-  font-weight: 900;
-  font-size: 15px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--acid);
 }
 .fc-price i {
   font-style: normal;
-  font-weight: 600;
-  font-size: 10.5px;
+  font-weight: 400;
+  font-size: 9.5px;
   color: var(--ink-2);
 }
 </style>

@@ -13,6 +13,10 @@
 - **榜单工具**：贝叶斯加权好评红榜 / 差评黑榜、"随机吃什么"
 - **管理后台**：审核通过 / 驳回、窗口下架、纠错与举报处理、数据概览、操作留痕
 
+## 设计风格
+
+酸性街头（Acid × Neo-Brutalism）：深色近黑底 + 荧光撞色（荧光黄绿 / 热粉 / 电光紫青）、粗黑描边与无模糊硬阴影、错位出血大排版；图标与食物插画全部为统一手绘内联 SVG，不使用 emoji，刻意避开模板化的卡片与渐变。
+
 ## 页面截图
 
 | 首页 | 餐厅楼层 | 窗口详情 |
@@ -23,7 +27,7 @@
 
 | 层 | 技术 |
 |---|---|
-| 前端 | Vue 3 + Vant 4 + Vue Router 4 + Vite 6 |
+| 前端 | Vue 3 + Vue Router 4 + Vite 6（手写组件与内联 SVG，无第三方 UI 库） |
 | 后端 | Node.js + Express 4 |
 | 数据库 | SQLite（better-sqlite3，零安装、文件型，首次启动自动建表并播种） |
 | 鉴权 | JWT + bcrypt 密码哈希 |
@@ -47,7 +51,7 @@ sdufe-food-guide/
 │       ├── api.js          # fetch 封装、token、图片上传
 │       ├── router.js
 │       ├── App.vue
-│       ├── components/     # StallCard、StarRating
+│       ├── components/     # FoodCard / FoodArt / StarBar / Icon / Sheet 等
 │       └── views/          # 首页 / 餐厅 / 详情 / 搜索 / 投稿 / 登录 / 我的 / 管理后台
 ├── uploads/                # 用户上传图片（运行时生成）
 └── docs/                   # README 截图

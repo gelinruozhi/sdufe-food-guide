@@ -1,26 +1,30 @@
 <template>
   <div class="auth-page">
-    <button class="back press" @click="$router.back()">‹</button>
+    <button class="back" @click="$router.back()">
+      <Icon name="back" :size="20" />
+    </button>
 
-    <div class="auth-logo float">🎁</div>
-    <h1 class="auth-title display-title">加入山财<br />美食共建</h1>
+    <div class="auth-logo floaty">
+      <Icon name="sparkle" :size="46" :stroke-width="2.2" />
+    </div>
+    <h1 class="auth-title">加入山财<br /><span class="stroke-hot">美食共建</span></h1>
     <p class="auth-sub muted">注册即可评价、收藏、投稿新窗口</p>
 
     <div class="auth-form">
-      <div class="input-row">
-        <span>👤</span>
+      <div class="in-wrap">
+        <Icon name="user" :size="18" class="in-ic" />
         <input v-model="username" placeholder="用户名（3-20 位字母数字）" />
       </div>
-      <div class="input-row">
-        <span>🏷️</span>
+      <div class="in-wrap">
+        <Icon name="edit" :size="18" class="in-ic" />
         <input v-model="nickname" placeholder="昵称（选填）" />
       </div>
-      <div class="input-row">
-        <span>🔑</span>
+      <div class="in-wrap">
+        <Icon name="bolt" :size="18" class="in-ic" />
         <input v-model="password" type="password" placeholder="密码（至少 6 位）" />
       </div>
-      <div class="input-row">
-        <span>🔒</span>
+      <div class="in-wrap">
+        <Icon name="check" :size="18" class="in-ic" />
         <input
           v-model="confirm"
           type="password"
@@ -29,12 +33,12 @@
         />
       </div>
 
-      <button class="btn btn-primary btn-block" :disabled="loading" @click="register">
+      <button class="btn btn-hot btn-block" :disabled="loading" @click="register">
         {{ loading ? '注册中…' : '注 册' }}
       </button>
     </div>
 
-    <p class="to-login">
+    <p class="to-switch">
       已有账号？<router-link to="/login">去登录</router-link>
     </p>
   </div>
@@ -45,8 +49,10 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { api, setToken } from '../api.js';
 import { toast } from '../lib/toast.js';
+import Icon from '../components/Icon.vue';
 
 export default {
+  components: { Icon },
   setup() {
     const router = useRouter();
     const username = ref('');
@@ -88,7 +94,7 @@ export default {
 <style scoped>
 .auth-page {
   min-height: 100vh;
-  padding: 60px 26px 30px;
+  padding: 64px 24px 30px;
   text-align: center;
 }
 .back {
@@ -97,44 +103,77 @@ export default {
   left: 16px;
   width: 38px;
   height: 38px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: var(--shadow-card);
-  font-size: 24px;
-  line-height: 1;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  background: var(--bg-2);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-bottom: 4px;
+}
+.back:active {
+  background: var(--hot);
+  color: #fff;
+  border-color: #000;
 }
 .auth-logo {
-  width: 92px;
-  height: 92px;
-  margin: 0 auto 16px;
-  border-radius: 28px;
-  background: linear-gradient(135deg, #ffd45e, var(--yellow-deep));
+  width: 88px;
+  height: 88px;
+  margin: 0 auto 20px;
+  border-radius: 6px;
+  background: var(--hot);
+  border: 2px solid #000;
+  box-shadow: 5px 5px 0 #000;
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 46px;
-  box-shadow: 0 10px 24px rgba(245, 166, 35, 0.35);
 }
-.auth-title { font-size: 29px; margin: 0 0 9px; }
-.auth-sub { font-size: 12.5px; margin: 0 0 26px; }
-
-.input-row {
+.auth-title {
+  font-size: 30px;
+  margin: 0 0 10px;
+}
+.stroke-hot {
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--hot);
+}
+.auth-sub {
+  font-size: 12.5px;
+  margin: 0 0 28px;
+}
+.auth-form {
+  text-align: left;
+}
+.in-wrap {
   display: flex;
   align-items: center;
-  gap: 11px;
-  background: #fff;
-  border-radius: var(--r-sm);
-  box-shadow: var(--shadow-card);
-  padding: 13px 16px;
+  gap: 10px;
+  background: var(--bg-2);
+  border: 2px solid var(--line);
+  border-radius: 4px;
+  padding: 12px 14px;
   margin-bottom: 12px;
+  transition: border-color 0.12s, box-shadow 0.12s;
 }
-.input-row span { font-size: 17px; }
-.input-row input { flex: 1; font-size: 15px; }
-
-.to-login { margin-top: 26px; font-size: 13px; color: var(--ink-2); }
-.to-login a { color: var(--primary); font-weight: 800; }
+.in-wrap:focus-within {
+  border-color: var(--hot);
+  box-shadow: 3px 3px 0 rgba(255, 46, 147, 0.3);
+}
+.in-ic {
+  color: var(--ink-2);
+  flex: none;
+}
+.in-wrap input {
+  flex: 1;
+  font-size: 14.5px;
+  min-width: 0;
+}
+.to-switch {
+  margin-top: 26px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.to-switch a {
+  color: var(--hot);
+  font-weight: 800;
+}
 </style>

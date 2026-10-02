@@ -1,48 +1,50 @@
 <template>
   <div class="starbar" @mouseleave="hover = 0">
     <button
-      v-for="i in 5"
-      :key="i"
+      v-for="n in 5"
+      :key="n"
       type="button"
-      class="star-btn"
-      :class="{ on: i <= (hover || modelValue), pop: i === lastSet }"
-      :style="{ fontSize: size + 'px' }"
-      @click="setStar(i)"
-      @mouseenter="!readonly && (hover = i)"
+      class="s-btn"
+      :class="{ on: n <= shown }"
+      :disabled="readonly"
+      @click="pick(n)"
+      @mouseenter="hover = n"
     >
-      ★
+      <Icon
+        :name="n <= shown ? 'starFill' : 'star'"
+        :size="size"
+        :stroke-width="2"
+      />
     </button>
-    <span v-if="showText && (modelValue || hover)" class="star-word">
-      {{ words[(hover || modelValue) - 1] }}
-    </span>
+    <span v-if="showLabel && shown" class="s-label">{{ LABELS[shown - 1] }}</span>
   </div>
 </template>
 
 <script>
-import { ref } from 'vue';
+import { computed } from 'vue';
+import Icon from './Icon.vue';
+
+const LABELS = ['踩雷', '一般', '还行', '推荐', '封神'];
 
 export default {
+  name: 'StarBar',
+  components: { Icon },
   props: {
     modelValue: { type: Number, default: 0 },
-    size: { type: Number, default: 28 },
     readonly: { type: Boolean, default: false },
-    showText: { type: Boolean, default: false },
+    size: { type: [Number, String], default: 26 },
+    showLabel: { type: Boolean, default: false },
   },
-  emits: ['update:modelValue'],
-  setup(props, { emit }) {
-    const hover = ref(0);
-    const lastSet = ref(0);
-    const words = ['很差', '一般', '还行', '满意', '超赞'];
-
-    function setStar(i) {
-      if (props.readonly) return;
-      const v = i === props.modelValue ? 0 : i;
-      lastSet.value = i;
-      emit('update:modelValue', v);
-      setTimeout(() => (lastSet.value = 0), 500);
-    }
-
-    return { hover, lastSet, words, setStar };
+  data: () => ({ hover: 0, LABELS }),
+  computed: {
+    shown() {
+      return this.hover || this.modelValue;
+    },
+  },
+  methods: {
+    pick(n) {
+      if (!this.readonly) this.$emit('update:modelValue', n);
+    },
   },
 };
 </script>
@@ -51,33 +53,26 @@ export default {
 .starbar {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 5px;
 }
-.star-btn {
-  padding: 0;
-  line-height: 1;
-  color: #e4d8cb;
-  transition: transform 0.15s, color 0.1s;
+.s-btn {
+  padding: 2px;
+  color: var(--ink-3);
+  line-height: 0;
+  transition: transform 0.08s, color 0.1s;
 }
-.star-btn.on {
-  color: var(--yellow-deep);
-  text-shadow: 0 2px 6px rgba(245, 166, 35, 0.4);
+.s-btn.on {
+  color: var(--acid);
 }
-.star-btn:not(.readonly):active {
-  transform: scale(0.8);
+.s-btn:not(:disabled):hover {
+  transform: scale(1.18) rotate(-8deg);
+  color: var(--acid);
 }
-.star-btn.pop {
-  animation: starPop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-@keyframes starPop {
-  40% {
-    transform: scale(1.35);
-  }
-}
-.star-word {
+.s-label {
   margin-left: 8px;
-  font-size: 13px;
+  font-family: var(--font-display);
   font-weight: 800;
-  color: var(--yellow-deep);
+  font-size: 13px;
+  color: var(--acid);
 }
 </style>

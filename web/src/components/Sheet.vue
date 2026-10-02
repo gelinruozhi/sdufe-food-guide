@@ -1,31 +1,37 @@
 <template>
   <teleport to="body">
-    <transition name="sheet-fade">
-      <div v-if="modelValue" class="sheet-mask" @click="close">
-        <transition name="sheet-up" appear>
-          <div v-if="modelValue" class="sheet-panel" @click.stop>
-            <div class="sheet-grip" />
-            <div v-if="title" class="sheet-title">{{ title }}</div>
-            <slot />
-          </div>
-        </transition>
+    <div v-if="open" class="sheet-mask" @click.self="close">
+      <div class="sheet">
+        <div class="sheet-head">
+          <span class="sheet-title">{{ title }}</span>
+          <button class="sheet-x" @click="close">
+            <Icon name="close" :size="18" />
+          </button>
+        </div>
+        <div class="sheet-body">
+          <slot />
+        </div>
       </div>
-    </transition>
+    </div>
   </teleport>
 </template>
 
 <script>
+import Icon from './Icon.vue';
+
 export default {
+  name: 'Sheet',
+  components: { Icon },
   props: {
-    modelValue: { type: Boolean, default: false },
+    open: { type: Boolean, default: false },
     title: { type: String, default: '' },
   },
-  emits: ['update:modelValue'],
-  setup(props, { emit }) {
-    function close() {
-      emit('update:modelValue', false);
-    }
-    return { close };
+  emits: ['close', 'update:open'],
+  methods: {
+    close() {
+      this.$emit('close');
+      this.$emit('update:open', false);
+    },
   },
 };
 </script>
@@ -34,47 +40,72 @@ export default {
 .sheet-mask {
   position: fixed;
   inset: 0;
-  background: rgba(36, 26, 18, 0.45);
-  z-index: 200;
+  z-index: 500;
+  background: rgba(0, 0, 0, 0.62);
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  animation: mask-in 0.18s ease both;
 }
-.sheet-panel {
-  width: min(520px, 100%);
-  background: var(--bg);
-  border-radius: 26px 26px 0 0;
-  padding: 10px 18px calc(26px + env(safe-area-inset-bottom, 0));
+@keyframes mask-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.sheet {
+  width: 100%;
+  max-width: 520px;
   max-height: 86vh;
-  overflow-y: auto;
+  background: var(--bg-2);
+  border: 2px solid var(--ink);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  box-shadow: 0 -6px 0 var(--acid);
+  display: flex;
+  flex-direction: column;
+  animation: sheet-up 0.26s cubic-bezier(0.2, 1.1, 0.4, 1) both;
 }
-.sheet-grip {
-  width: 40px;
-  height: 4px;
-  border-radius: 2px;
-  background: #ddcfc0;
-  margin: 4px auto 12px;
+@keyframes sheet-up {
+  from {
+    transform: translateY(60px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 2px solid var(--line);
 }
 .sheet-title {
-  font-size: 17px;
-  font-weight: 900;
-  text-align: center;
-  margin-bottom: 14px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 15px;
 }
-.sheet-fade-enter-active,
-.sheet-fade-leave-active {
-  transition: opacity 0.25s;
+.sheet-x {
+  width: 30px;
+  height: 30px;
+  border: 2px solid var(--ink);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink);
 }
-.sheet-fade-enter-from,
-.sheet-fade-leave-to {
-  opacity: 0;
+.sheet-x:active {
+  background: var(--hot);
+  color: #fff;
+  border-color: var(--black);
 }
-.sheet-up-enter-active,
-.sheet-up-leave-active {
-  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.sheet-up-enter-from,
-.sheet-up-leave-to {
-  transform: translateY(100%);
+.sheet-body {
+  padding: 16px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 </style>

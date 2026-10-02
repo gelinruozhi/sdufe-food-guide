@@ -1,18 +1,22 @@
 <template>
   <div class="auth-page">
-    <button class="back press" @click="$router.back()">‹</button>
+    <button class="back" @click="$router.back()">
+      <Icon name="back" :size="20" />
+    </button>
 
-    <div class="auth-logo float">🍜</div>
-    <h1 class="auth-title display-title">欢迎回来<br />干饭人</h1>
+    <div class="auth-logo floaty">
+      <Icon name="bolt" :size="48" :stroke-width="2.4" />
+    </div>
+    <h1 class="auth-title">欢迎回来<br /><span class="stroke-acid">干饭人</span></h1>
     <p class="auth-sub muted">登录后评价、收藏、投稿，一起完善美食地图</p>
 
     <div class="auth-form">
-      <div class="input-row">
-        <span>👤</span>
+      <div class="in-wrap">
+        <Icon name="user" :size="18" class="in-ic" />
         <input v-model="username" placeholder="用户名" autocomplete="username" />
       </div>
-      <div class="input-row">
-        <span>🔑</span>
+      <div class="in-wrap">
+        <Icon name="bolt" :size="18" class="in-ic" />
         <input
           v-model="password"
           type="password"
@@ -22,23 +26,15 @@
         />
       </div>
 
-      <button
-        class="btn btn-primary btn-block"
-        :disabled="loading"
-        @click="login"
-      >
+      <button class="btn btn-acid btn-block" :disabled="loading" @click="login">
         {{ loading ? '登录中…' : '登 录' }}
       </button>
     </div>
 
     <div class="quick-accounts">
       <p class="muted tiny">演示账号（点击填充）</p>
-      <button class="qa-chip press" @click="fill('admin', 'admin123')">
-        管理员 admin
-      </button>
-      <button class="qa-chip press" @click="fill('xiaoming', '123456')">
-        同学 xiaoming
-      </button>
+      <button class="qa-chip" @click="fill('admin', 'admin123')">管理员 admin</button>
+      <button class="qa-chip" @click="fill('xiaoming', '123456')">同学 xiaoming</button>
     </div>
 
     <p class="to-register">
@@ -52,8 +48,10 @@ import { ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { api, setToken } from '../api.js';
 import { toast } from '../lib/toast.js';
+import Icon from '../components/Icon.vue';
 
 export default {
+  components: { Icon },
   setup() {
     const router = useRouter();
     const route = useRoute();
@@ -95,7 +93,7 @@ export default {
 <style scoped>
 .auth-page {
   min-height: 100vh;
-  padding: 70px 26px 30px;
+  padding: 70px 24px 30px;
   text-align: center;
 }
 .back {
@@ -104,56 +102,96 @@ export default {
   left: 16px;
   width: 38px;
   height: 38px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: var(--shadow-card);
-  font-size: 24px;
-  line-height: 1;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  background: var(--bg-2);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-bottom: 4px;
+}
+.back:active {
+  background: var(--hot);
+  color: #fff;
+  border-color: #000;
 }
 .auth-logo {
-  width: 92px;
-  height: 92px;
-  margin: 0 auto 18px;
-  border-radius: 28px;
-  background: linear-gradient(135deg, #ff6a45, var(--primary-deep));
+  width: 88px;
+  height: 88px;
+  margin: 0 auto 20px;
+  border-radius: 6px;
+  background: var(--acid);
+  border: 2px solid #000;
+  box-shadow: 5px 5px 0 #000;
+  color: #000;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 48px;
-  box-shadow: var(--shadow-primary);
 }
-.auth-title { font-size: 30px; margin: 0 0 10px; }
-.auth-sub { font-size: 12.5px; margin: 0 0 30px; }
+.auth-title {
+  font-size: 32px;
+  margin: 0 0 10px;
+}
+.auth-sub {
+  font-size: 12.5px;
+  margin: 0 0 28px;
+}
 
-.auth-form { text-align: left; }
-.input-row {
+.auth-form {
+  text-align: left;
+}
+.in-wrap {
   display: flex;
   align-items: center;
-  gap: 11px;
-  background: #fff;
-  border-radius: var(--r-sm);
-  box-shadow: var(--shadow-card);
-  padding: 14px 16px;
-  margin-bottom: 13px;
+  gap: 10px;
+  background: var(--bg-2);
+  border: 2px solid var(--line);
+  border-radius: 4px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  transition: border-color 0.12s, box-shadow 0.12s;
 }
-.input-row span { font-size: 18px; }
-.input-row input { flex: 1; font-size: 15px; }
+.in-wrap:focus-within {
+  border-color: var(--acid);
+  box-shadow: 3px 3px 0 rgba(204, 255, 0, 0.3);
+}
+.in-ic {
+  color: var(--ink-2);
+  flex: none;
+}
+.in-wrap input {
+  flex: 1;
+  font-size: 14.5px;
+  min-width: 0;
+}
 
-.quick-accounts { margin-top: 26px; }
-.quick-accounts p { margin: 0 0 10px; }
-.qa-chip {
-  background: var(--primary-soft);
-  color: var(--primary-deep);
-  border-radius: 999px;
-  padding: 7px 16px;
-  font-size: 12px;
-  font-weight: 800;
-  margin: 0 5px;
+.quick-accounts {
+  margin-top: 26px;
 }
-.to-register { margin-top: 30px; font-size: 13px; color: var(--ink-2); }
-.to-register a { color: var(--primary); font-weight: 800; }
+.quick-accounts p {
+  margin: 0 0 11px;
+}
+.qa-chip {
+  background: var(--bg-2);
+  color: var(--ink);
+  border: 2px solid var(--line);
+  border-radius: 4px;
+  padding: 7px 15px;
+  font-size: 12px;
+  font-weight: 700;
+  margin: 0 5px 7px;
+}
+.qa-chip:active {
+  background: var(--acid);
+  color: #000;
+  border-color: #000;
+}
+.to-register {
+  margin-top: 28px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.to-register a {
+  color: var(--acid);
+  font-weight: 800;
+}
 </style>
