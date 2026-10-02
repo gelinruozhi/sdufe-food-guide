@@ -3,8 +3,8 @@ export const AGREE_VERSION = 1;
 export const AGREE_KEY = 'sdufe_disclaimer_agreed';
 export const EFFECTIVE_DATE = '2026-10-02';
 
-// 维护者联系方式：面向全校发布前请替换为真实邮箱（可用一次性/小号邮箱）
-export const CONTACT = '（发布前请在此填写联系邮箱）';
+// 维护者联系方式
+export const CONTACT = 'gelinruozhi@gmail.com';
 
 // 首访弹窗里展示的核心摘要
 export const GATE_POINTS = [
