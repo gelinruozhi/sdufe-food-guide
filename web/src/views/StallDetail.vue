@@ -23,7 +23,7 @@
       <!-- 关键信息 -->
       <div class="quick panel">
         <div class="q-item">
-          <b>￥{{ stall.avg_price }}</b><span>人均</span>
+          <b>{{ stall.avg_price ? '￥' + stall.avg_price : '待补充' }}</b><span>人均</span>
         </div>
         <div class="q-sep" />
         <div class="q-item q-wide">
@@ -35,6 +35,15 @@
         <Icon name="location" :size="14" />
         <span>{{ stall.address }}</span>
         <a v-if="stall.phone" :href="`tel:${stall.phone}`">{{ stall.phone }}</a>
+        <a
+          v-if="stall.stall_type === 'outside' && stall.lng"
+          :href="naviUrl"
+          target="_blank"
+          rel="noopener"
+          class="addr-navi"
+        >
+          高德导航
+        </a>
       </div>
 
       <!-- 评分分布 -->
@@ -235,6 +244,13 @@ export default {
     }
     onMounted(load);
 
+    const naviUrl = computed(() => {
+      const s = stall.value;
+      if (!s.lng) return '#';
+      const name = encodeURIComponent(s.name);
+      return `https://uri.amap.com/navigation?to=${s.lng},${s.lat},${name}&mode=car&coordinate=gaode&callnative=1`;
+    });
+
     function pct(i) {
       const total = stall.value.rating_count || 1;
       return Math.round(((stall.value.distribution?.[i] || 0) / total) * 100);
@@ -330,7 +346,7 @@ export default {
     }
 
     return {
-      stall, reviews, myVote, myFav,
+      stall, reviews, myVote, myFav, naviUrl,
       reviewOpen, reportOpen, form, submitting, uploading, preview,
       REPORT_REASONS, toast,
       pct, doVote, doFav, openReview, pickImage, submitReview, doHelpful,
@@ -440,6 +456,15 @@ export default {
 }
 .addr a {
   color: var(--cyan);
+}
+.addr-navi {
+  margin-left: auto;
+  color: var(--acid) !important;
+  font-weight: 700;
+  border: 1.5px solid var(--acid);
+  border-radius: 3px;
+  padding: 2px 9px;
+  font-size: 11px;
 }
 
 /* 评分分布 */

@@ -56,6 +56,8 @@ CREATE TABLE IF NOT EXISTS stalls (
   delivery_platform TEXT,
   delivery_fee REAL,
   min_order REAL,
+  lng REAL,
+  lat REAL,
   source TEXT DEFAULT 'official',
   creator_id INTEGER,
   status TEXT DEFAULT 'approved',
@@ -137,6 +139,12 @@ CREATE TABLE IF NOT EXISTS feedback (
   handled_at TEXT
 );
 `);
+
+// 轻量迁移：为已存在的 stalls 表补充经纬度列
+for (const col of ['lng', 'lat']) {
+  const has = db.prepare('PRAGMA table_info(stalls)').all().some((x) => x.name === col);
+  if (!has) db.exec(`ALTER TABLE stalls ADD COLUMN ${col} REAL`);
+}
 
 // 贝叶斯评分参数
 export const BAYES_M = 10;

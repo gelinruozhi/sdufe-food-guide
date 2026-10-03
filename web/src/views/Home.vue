@@ -50,7 +50,7 @@
             <span class="ps-name">{{ cur.name }}</span>
             <span class="ps-meta">
               <Icon name="starFill" :size="12" class="ps-star" />
-              {{ cur.rating_avg || '暂无' }} · ￥{{ cur.avg_price }} · {{ cur.category }}
+              {{ cur.rating_avg || '暂无' }} · {{ cur.avg_price ? '￥' + cur.avg_price : '人均待补' }} · {{ cur.category }}
             </span>
           </div>
         </div>

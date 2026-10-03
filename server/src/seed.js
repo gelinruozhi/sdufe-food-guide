@@ -111,20 +111,20 @@ const inside = [
 // ===== 校外店铺 =====
 // [名称, 品类, 均价, 描述, 地址, 电话, 外卖, 平台, 配送费, 起送]
 const outside = [
-  ['巷子里炭火烤肉','烤肉',65,'学生聚餐据点，双人套餐划算，生菜免费续。','圣井校区东门（黄旗山一号路）外侧','13800001111',0,'',0,0],
-  ['阿婆炒鸡','炒鸡',38,'临沂炒鸡大盘上桌，配饼蘸汤，三四人吃刚好。','圣井校区东门（黄旗山一号路）外侧','13800002222',1,'美团',3,30],
-  ['碗里香螺蛳粉','粉面',14,'臭味相投，炸蛋必加，汤都喝完。','圣井校区东门（黄旗山一号路）外侧','13800003333',1,'美团/饿了么',3,20],
-  ['一间轻食','轻食',22,'低卡餐外卖，糙米鸡胸，健身党常点。','圣井校区北门（经十东路）外侧','13800004444',1,'美团',2,25],
-  ['川香小厨','川菜',25,'水煮肉片、回锅肉现炒，特别下饭。','圣井校区北门（经十东路）外侧','13800005555',1,'美团/饿了么',3,30],
-  ['夜市铁板鱿鱼','夜市小吃',12,'出摊较晚，鱿鱼须脆嫩，刷甜辣酱。','圣井校区东门（黄旗山一号路）外侧','',0,'',0,0],
-  ['鲜果切水果捞','甜品',15,'现切应季水果，酸奶水果捞清爽。','圣井校区东门（黄旗山一号路）外侧','13800006666',1,'饿了么',2,18],
-  ['老济南黄焖鸡','米饭',16,'开了多年，鸡腿肉大块，外卖送达快。','圣井校区北门（经十东路）外侧','13800007777',1,'美团/饿了么',2,20],
+  ['圣泰烧烤','烧烤',42,'校外烧烤店，距校区直线约 700 米，适合聚餐；口味与分量欢迎吃过的同学补充。','经十东路16888号','',0,'',0,0,'10:00-22:30',117.382260,36.667618],
+  ['重庆鸡公煲','鸡公煲',0,'川味鸡公煲，距校区直线约 960 米；辣度与分量欢迎补充真实评价。','求学路与乐业路交叉口东360米','',0,'',0,0,'10:00-21:30',117.364319,36.671815],
+  ['花小小新疆炒米粉','粉面',10,'连锁新疆炒米粉，鸡山村商业街，距校区直线约 970 米，人均约 10 元。','巨野河街道鸡山村商业街14号','',0,'',0,0,'10:00-21:30',117.364667,36.672550],
+  ['鑫远鹏美食餐厅','中餐',0,'北门外中餐厅，距校区直线约 1.4 公里；菜品与人均欢迎补充。','六号路与经十东路交叉口北120米','',0,'',0,0,'10:00-21:30',117.387948,36.674957],
+  ['瑞鑫餐厅','快餐',23,'北门外快餐厅，距校区直线约 1.45 公里，人均约 23 元。','六号路与经十东路交叉口北260米','',0,'',0,0,'09:00-21:00',117.387948,36.676125],
+  ['一粥七天健康粥馆','粥点',0,'连锁粥馆，距校区直线约 970 米，适合早餐夜宵；人均待补充。','求学路与乐业路交叉口东360米','',0,'',0,0,'10:00-21:30',117.364075,36.671225],
+  ['王世仁的面','面食',14,'鸡山村面馆，距校区直线约 960 米，人均约 14 元。','高新区东区鸡山村173号','',0,'',0,0,'09:00-20:00',117.364627,36.672296],
+  ['麦薯贵州牛肉蘸水菜','地方菜',0,'贵州风味蘸水菜，距校区直线约 850 米；口味与人均欢迎补充。','四号路与经十东路交叉口东南280米','',0,'',0,0,'10:00-21:30',117.383275,36.671725],
 ];
 
 const insertStall = db.prepare(`
   INSERT INTO stalls (stall_type,canteen_id,floor_id,name,category,avg_price,business_hours,
-    description,address,phone,delivery_supported,delivery_platform,delivery_fee,min_order,source,status)
-  VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    description,address,phone,delivery_supported,delivery_platform,delivery_fee,min_order,lng,lat,source,status)
+  VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
 `);
 const mealHours = '10:30-13:00, 16:30-19:00';
 const breakfastHours = '06:30-09:30, 10:30-13:00, 16:30-19:00';
@@ -136,14 +136,14 @@ for (const [ci, fl, name, cat, price, desc] of inside) {
   const hours = ['饼类','早餐','粥点'].includes(cat) ? breakfastHours : mealHours;
   const info = insertStall.run(
     'inside', cid, fid, name, cat, price, hours, desc,
-    null, null, 0, null, null, null, 'official', 'approved'
+    null, null, 0, null, null, null, null, null, 'official', 'approved'
   );
   stallIds.push(info.lastInsertRowid);
 }
-for (const [name,cat,price,desc,addr,phone,dl,plat,fee,minO] of outside) {
+for (const [name,cat,price,desc,addr,phone,dl,plat,fee,minO,hours,lng,lat] of outside) {
   const info = insertStall.run(
-    'outside', null, null, name, cat, price, '10:00-21:30', desc,
-    addr, phone, dl, plat || null, fee || null, minO || null, 'official', 'approved'
+    'outside', null, null, name, cat, price, hours, desc,
+    addr, phone, dl, plat || null, fee || null, minO || null, lng, lat, 'official', 'approved'
   );
   stallIds.push(info.lastInsertRowid);
 }

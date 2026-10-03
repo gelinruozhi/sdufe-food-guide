@@ -6,7 +6,7 @@ const r = Router();
 
 const STALL_COLS = `id,stall_type,canteen_id,floor_id,name,category,avg_price,business_hours,
   description,cover,address,phone,delivery_supported,delivery_platform,delivery_fee,min_order,
-  source,status,upvotes,downvotes,star_sum,rating_count,created_at`;
+  lng,lat,source,status,upvotes,downvotes,star_sum,rating_count,created_at`;
 
 // 餐厅列表（含楼层与每层窗口数）
 r.get('/', (req, res) => {
