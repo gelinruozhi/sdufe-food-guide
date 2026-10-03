@@ -12,7 +12,7 @@
 
     <!-- ===== 出血大标题 ===== -->
     <header class="hero">
-      <span class="hero-tag">SDUFE 学生美食共建</span>
+      <span class="hero-tag">SDUFE 圣井校区 · 学生美食共建</span>
       <h1 class="hero-type">
         EAT<span class="h-bolt"><Icon name="bolt" :size="46" /></span><br />
         <span class="stroke-acid">山财</span><br />
